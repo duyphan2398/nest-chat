@@ -1,0 +1,6 @@
+{
+  "SERVER_ERROR": "Server error",
+  "NOT_FOUND_ERROR": "Not found",
+  "AUTHENTICATION_ERROR": "Please login",
+  "AUTHORIZATION_ERROR": "Permission denied"
+}
