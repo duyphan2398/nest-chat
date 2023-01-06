@@ -5,8 +5,14 @@ import { TypeOrmModule} from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmConfig } from './typeorm/typeorm-config';
 import { MembersModule } from './modules/members/members.module';
-import { I18nModule } from 'nestjs-i18n';
 import * as path from 'path';
+import {
+  AcceptLanguageResolver,
+  I18nModule,
+  QueryResolver,
+} from 'nestjs-i18n';
+import {HttpExceptionFilter} from "./exceptions/http-exception.filter";
+import {APP_FILTER} from "@nestjs/core";
 
 @Module({
   imports: [
@@ -23,6 +29,13 @@ import * as path from 'path';
         path: path.join(__dirname, '/i18n/'),
         watch: true,
       },
+      resolvers: [
+        {
+          use: QueryResolver,
+          options: ['lang']
+        },
+        AcceptLanguageResolver,
+      ],
     }),
     MembersModule,
   ],
@@ -30,7 +43,12 @@ import * as path from 'path';
       AppController
   ],
   providers: [
-      AppService
+      AppService,
+    {
+      provide: APP_FILTER,
+      useClass: HttpExceptionFilter,
+    },
+
   ],
 })
 export class AppModule {}
