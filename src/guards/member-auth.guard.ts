@@ -2,11 +2,12 @@ import { CanActivate, ExecutionContext, Inject, UnauthorizedException } from '@n
 import {MembersService} from "../modules/members/services/members.service";
 import { I18nContext } from "nestjs-i18n";
 import {MomentProvider} from "../providers/moment.provider";
-
+import { TOKEN_EXPIRED_TIME } from "../modules/members/enums/member.enum";
 
 export class MemberAuthGuard implements CanActivate {
   constructor(
-      @Inject(MembersService) private readonly membersService: MembersService, private readonly momentProvider: MomentProvider
+      @Inject(MembersService) private readonly membersService: MembersService,
+      @Inject(MomentProvider) private readonly momentProvider: MomentProvider
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -29,9 +30,11 @@ export class MemberAuthGuard implements CanActivate {
 
 
     // Check token expired
-    console.log(authMember.created_token)
-    console.log( new Date(authMember.created_token) < new Date() );
-    console.log(this.momentProvider.moment.now())
+    const moment = this.momentProvider.moment;
+    const expiredTime = moment(authMember.created_token).add(TOKEN_EXPIRED_TIME.SECONDS, 'seconds')
+    const diffTime = moment().diff(expiredTime, 'seconds');
+    console.log( moment());
+    console.log(diffTime);
 
 
     return true;

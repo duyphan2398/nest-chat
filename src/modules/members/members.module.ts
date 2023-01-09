@@ -14,6 +14,7 @@ import {MomentProvider} from "../../providers/moment.provider";
   controllers: [MembersController],
   providers: [
     MembersService,
+    MomentProvider
   ],
   exports: [
     MembersService,
