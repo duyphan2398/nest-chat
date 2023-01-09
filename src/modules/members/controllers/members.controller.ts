@@ -14,7 +14,7 @@ import { UpdateMemberDto } from '../dto/update-member.dto';
 import {AuthGuard} from "../../../guards/auth.guard";
 
 @Controller('members')
-@UseGuards(AuthGuard)
+// @UseGuards(AuthGuard)
 export class MembersController {
   constructor(private readonly membersService: MembersService) {}
 
@@ -24,8 +24,8 @@ export class MembersController {
   // }
 
   @Post()
-  findAll() {
-    return this.membersService.findAll();
+  async findAll() {
+    return await this.membersService.findAll();
   }
 
   // @Get(':id')

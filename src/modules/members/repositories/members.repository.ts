@@ -1,11 +1,8 @@
-import { Injectable } from "@nestjs/common";
-
+import { Repository } from 'typeorm';
+import { Member } from "../entities/member.entity";
+import {Injectable} from "@nestjs/common";
 
 @Injectable()
-export class MembersRepository {
-     findAll() {
-        return 'Hello World';
-    }
-
-
+export class MembersRepository extends Repository<Member> {
+    // Custom repository methods go here
 }
