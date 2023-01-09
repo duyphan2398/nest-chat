@@ -1,0 +1,5 @@
+{
+  "TOKEN_WRONG": "Token wrong",
+  "TOKEN_EMPTY":  "Token is required",
+  "TOKEN_EXPIRED":  "Token is expired"
+}

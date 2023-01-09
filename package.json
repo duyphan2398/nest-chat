@@ -27,6 +27,8 @@
     "@nestjs/platform-express": "^9.0.0",
     "@nestjs/typeorm": "^9.0.1",
     "cross-env": "^7.0.3",
+    "moment": "^2.29.4",
+    "moment-timezone": "^0.5.40",
     "mysql2": "^2.3.3",
     "nestjs-i18n": "^10.2.4",
     "reflect-metadata": "^0.1.13",

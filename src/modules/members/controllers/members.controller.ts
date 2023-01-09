@@ -11,12 +11,14 @@ import {
 import { MembersService } from '../services/members.service';
 import { CreateMemberDto } from '../dto/create-member.dto';
 import { UpdateMemberDto } from '../dto/update-member.dto';
-import {AuthGuard} from "../../../guards/auth.guard";
+import {MemberAuthGuard} from "../../../guards/member-auth.guard";
+import {MomentProvider} from "../../../providers/moment.provider";
 
 @Controller('members')
-// @UseGuards(AuthGuard)
 export class MembersController {
-  constructor(private readonly membersService: MembersService) {}
+  constructor(
+      private readonly membersService: MembersService,
+  ) {}
 
   // @Post()
   // create(@Body() createMemberDto: CreateMemberDto) {
@@ -24,6 +26,7 @@ export class MembersController {
   // }
 
   @Post()
+  @UseGuards(MemberAuthGuard)
   async findAll() {
     return await this.membersService.findAll();
   }

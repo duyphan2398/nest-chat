@@ -3,19 +3,20 @@ import { MembersService } from './services/members.service';
 import { MembersController } from './controllers/members.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Member } from './entities/member.entity';
-import { MembersRepository } from './repositories/members.repository';
-
+import {MomentProvider} from "../../providers/moment.provider";
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([ 
-      Member 
+    TypeOrmModule.forFeature([
+      Member
     ]),
   ],
   controllers: [MembersController],
   providers: [
     MembersService,
-    MembersRepository
+  ],
+  exports: [
+    MembersService,
   ]
 })
 export class MembersModule {}
