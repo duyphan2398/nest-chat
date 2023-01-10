@@ -37,14 +37,7 @@ export class MembersController {
   @Get(':id')
   @UseGuards(MemberAuthGuard)
   async findOne(@Param('id') id: string) {
-    const member = await this.membersService.findOne(+id);
-
-    if (member) {
-      return await this.membersService.findOne(+id);
-    } else  {
-      throw new NotFoundException()
-    }
-
+    return  await this.membersService.findOne(+id);
   }
 
   // @Patch(':id')
