@@ -4,10 +4,9 @@ import {ConfigModule} from '@nestjs/config';
 import {TypeOrmConfig} from './typeorm/typeorm-config';
 import {MembersModule} from './modules/members/members.module';
 import {AcceptLanguageResolver, I18nModule, QueryResolver} from 'nestjs-i18n';
-import {HttpExceptionFilter} from "./exceptions/http-exception.filter";
+import { HttpExceptionFilter } from "./core/exceptions/http-exception.filter";
 import {APP_FILTER, APP_GUARD} from "@nestjs/core";
 import * as path from 'path';
-import  { MomentProvider} from "./providers/moment.provider";
 import {Global} from "@nestjs/common";
 
 @Global()
@@ -39,7 +38,6 @@ import {Global} from "@nestjs/common";
     ],
     controllers: [],
     providers: [
-        MomentProvider,
         {
             provide: APP_FILTER,
             useClass: HttpExceptionFilter,

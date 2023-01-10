@@ -6,20 +6,22 @@ import {
   Patch,
   Param,
   Delete,
-  UseGuards
+  UseGuards,
+  Req, NotFoundException
 } from '@nestjs/common';
 import { MembersService } from '../services/members.service';
 import { CreateMemberDto } from '../dto/create-member.dto';
 import { UpdateMemberDto } from '../dto/update-member.dto';
 import {MemberAuthGuard} from "../../../guards/member-auth.guard";
-import {MomentProvider} from "../../../providers/moment.provider";
+import {RequestInterface} from "../../../core/request/request.interface";
+
 
 @Controller('members')
 export class MembersController {
   constructor(
       private readonly membersService: MembersService,
   ) {}
-
+  //
   // @Post()
   // create(@Body() createMemberDto: CreateMemberDto) {
   //   return this.membersService.create(createMemberDto);
@@ -27,20 +29,29 @@ export class MembersController {
 
   @Post()
   @UseGuards(MemberAuthGuard)
-  async findAll() {
+  async findAll(@Req() request: RequestInterface) {
+    const authMember = request.authMember;
     return await this.membersService.findAll();
   }
 
-  // @Get(':id')
-  // findOne(@Param('id') id: string) {
-  //   return this.membersService.findOne(+id);
-  // }
+  @Get(':id')
+  @UseGuards(MemberAuthGuard)
+  async findOne(@Param('id') id: string) {
+    const member = await this.membersService.findOne(+id);
+
+    if (member) {
+      return await this.membersService.findOne(+id);
+    } else  {
+      throw new NotFoundException()
+    }
+
+  }
 
   // @Patch(':id')
   // update(@Param('id') id: string, @Body() updateMemberDto: UpdateMemberDto) {
   //   return this.membersService.update(+id, updateMemberDto);
   // }
-
+  //
   // @Delete(':id')
   // remove(@Param('id') id: string) {
   //   return this.membersService.remove(+id);

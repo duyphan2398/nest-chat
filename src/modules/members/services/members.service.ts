@@ -14,6 +14,10 @@ export class MembersService  {
     return await this.membersRepo.find();
   }
 
+  async findOne(id): Promise<Member> {
+    return await this.membersRepo.findOneById(id);
+  }
+
   async findByToken(token: string): Promise<Member> {
     return await this.membersRepo.createQueryBuilder('member')
         .where('member.token = :token', { token })
