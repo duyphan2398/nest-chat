@@ -30,12 +30,12 @@ export class MemberAuthGuard implements CanActivate {
 
 
     // Check token expired
-    const moment = this.momentProvider.moment;
+    const moment = this.momentProvider.moment
     const expiredTime = moment(authMember.created_token).add(TOKEN_EXPIRED_TIME.SECONDS, 'seconds')
     const diffTime = moment().diff(expiredTime, 'seconds');
-    console.log( moment());
-    console.log(diffTime);
-
+    if (!authMember.created_token || diffTime > 0 ) {
+      throw new UnauthorizedException(i18n.t('auth-error-messages.TOKEN_EXPIRED'));
+    }
 
     return true;
   }
