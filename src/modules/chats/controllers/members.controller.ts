@@ -2,14 +2,9 @@ import {
   Controller,
   Get,
   Post,
-  Body,
-  Patch,
   Param,
-  Delete,
   UseGuards,
   Req,
-  Res,
-  HttpStatus,
   Inject,
 } from '@nestjs/common';
 import { MembersService } from '../services/members.service';
