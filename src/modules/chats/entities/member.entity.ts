@@ -1,5 +1,6 @@
 import {Entity, Column, PrimaryGeneratedColumn, OneToMany, JoinColumn} from "typeorm";
 import {Expert} from "./expert.entity";
+import {RoomChat} from "./room-chat.entity";
 
 @Entity('ape_members')
 export class Member {
@@ -47,8 +48,14 @@ export class Member {
     status: string;
 
     // --- RELATIONS
-    // Expert
+
+    // Experts
     @OneToMany(type => Expert, expert => expert.member)
-    @JoinColumn({ name: "expert_id" })
+    @JoinColumn({ name: "member_id" })
     experts: Expert[];
+
+    // RoomChats
+    @OneToMany(type => RoomChat, room_chat => room_chat.member)
+    @JoinColumn({ name: "member_id" })
+    room_chats: RoomChat[];
 }

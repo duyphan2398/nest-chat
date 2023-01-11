@@ -1,6 +1,5 @@
-import {Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToMany} from "typeorm";
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from "typeorm";
 import {Member} from "./member.entity";
-import {RoomChat} from "./room-chat.entity";
 
 @Entity('ape_experts')
 export class Expert {
@@ -40,9 +39,4 @@ export class Expert {
     @ManyToOne(type => Member, member => member.experts)
     @JoinColumn({ name: "member_id" })
     member: Member;
-
-    // RoomChats
-    @OneToMany(type => RoomChat, room_chat => room_chat.expert)
-    @JoinColumn({ name: "expert_id" })
-    room_chats: RoomChat[];
 }
