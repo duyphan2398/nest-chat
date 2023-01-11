@@ -2,35 +2,30 @@ import {
   Controller,
   Get,
   Post,
-  Body,
-  Patch,
   Param,
-  Delete,
   UseGuards,
   Req,
-  NotFoundException
+  Inject
 } from '@nestjs/common';
-import { MembersService } from '../services/members.service';
-import {MemberAuthGuard} from "../../../guards/member-auth.guard";
 import {RequestInterface} from "../../../core/request/request.interface";
+import {ExpertAuthGuard} from "../../../guards/expert-auth.guard";
+import {ExpertsService} from "../services/experts.service";
 
 
 @Controller('expert')
 export class ExpertsController {
-  constructor(
-      private readonly membersService: MembersService,
-  ) {}
+  constructor(@Inject(ExpertsService) private readonly expertsService: ExpertsService) {}
 
   @Post()
-  @UseGuards(MemberAuthGuard)
+  @UseGuards(ExpertAuthGuard)
   async findAll(@Req() request: RequestInterface) {
-    const authMember = request.authMember;
-    return await this.membersService.findAll();
+    const authExpert = request.authExpert;
+    return await this.expertsService.findAll();
   }
 
   @Get(':id')
-  @UseGuards(MemberAuthGuard)
+  @UseGuards(ExpertAuthGuard)
   async findOne(@Param('id') id: string) {
-    return  await this.membersService.findOne(+id);
+    return  await this.expertsService.findOne(+id);
   }
 }

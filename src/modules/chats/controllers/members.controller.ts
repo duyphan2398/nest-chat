@@ -9,7 +9,7 @@ import {
     UseGuards,
     Req,
     Res,
-    HttpStatus
+    HttpStatus, Inject
 } from '@nestjs/common';
 import {MembersService} from '../services/members.service';
 import {MemberAuthGuard} from "../../../guards/member-auth.guard";
@@ -19,8 +19,8 @@ import {Responder} from "../../../core/response/responder.response";
 @Controller('members')
 export class MembersController {
     constructor(
-        private readonly membersService: MembersService,
-        private readonly responder: Responder
+        @Inject(MembersService) private readonly membersService: MembersService,
+        @Inject(Responder) private readonly responder: Responder
     ) {
     }
 

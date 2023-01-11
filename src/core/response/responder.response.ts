@@ -1,5 +1,7 @@
-import {HttpStatus, Inject} from "@nestjs/common";
+import {HttpStatus, Inject, Injectable} from "@nestjs/common";
 import {I18nContext, I18nService} from 'nestjs-i18n';
+
+@Injectable()
 export class Responder {
     constructor(@Inject(I18nService) private i18n: I18nService) {}
 
