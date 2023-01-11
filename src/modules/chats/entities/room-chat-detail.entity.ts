@@ -5,6 +5,8 @@ import {
   ManyToOne,
   JoinColumn,
   OneToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { Member } from './member.entity';
 import { RoomChat } from './room-chat.entity';
@@ -45,20 +47,22 @@ export class RoomChatDetail {
   @Column()
   type: string;
 
-  @Column()
-  token: string;
+  @CreateDateColumn()
+  created: string;
 
-  @Column()
-  created_token: string;
+  @UpdateDateColumn()
+  updated: string;
 
-  // --- RELATIONS
-
-  // RoomChat
+  /**
+   * Relation: RoomChats
+   */
   @ManyToOne((type) => RoomChat, (room_chat) => room_chat.room_chat_details)
   @JoinColumn({ name: 'room_chat_id' })
   room_chat: RoomChat;
 
-  // RoomChatDetails
+  /**
+   * Relation: RoomChatDetailImage
+   */
   @OneToOne(
     (type) => RoomChatDetailImage,
     (room_chat_detail_image) => room_chat_detail_image.room_chat_detail,

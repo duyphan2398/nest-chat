@@ -4,6 +4,8 @@ import {
   PrimaryGeneratedColumn,
   JoinColumn,
   OneToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { RoomChat } from './room-chat.entity';
 import { RoomChatDetail } from './room-chat-detail.entity';
@@ -14,34 +16,29 @@ export class RoomChatDetailImage {
   id: number;
 
   @Column()
-  name: string;
+  room_chat_detail_id: number;
 
   @Column()
-  description: string;
+  path: string;
 
   @Column()
-  job_title: string;
+  size: number;
 
   @Column()
-  expert_avatar: string;
+  width: number;
 
   @Column()
-  member_id: number;
+  height: number;
 
-  @Column()
-  is_admin: number;
+  @CreateDateColumn()
+  created: string;
 
-  @Column()
-  status: string;
+  @UpdateDateColumn()
+  updated: string;
 
-  @Column()
-  token: string;
-
-  @Column()
-  created_token: string;
-
-  // --- RELATIONS
-  // RoomChatDetail
+  /**
+   * Relation: RoomChatDetail
+   */
   @OneToOne(
     (type) => RoomChatDetail,
     (room_chat_detail) => room_chat_detail.room_chat_detail_image,

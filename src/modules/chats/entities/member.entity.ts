@@ -52,14 +52,16 @@ export class Member {
   @Column()
   status: string;
 
-  // --- RELATIONS
-
-  // Experts
+  /**
+   * Relation: Experts
+   */
   @OneToMany((type) => Expert, (expert) => expert.member)
   @JoinColumn({ name: 'member_id' })
   experts: Expert[];
 
-  // RoomChats
+  /**
+   * Relation: RoomChats
+   */
   @OneToMany((type) => RoomChat, (room_chat) => room_chat.member)
   @JoinColumn({ name: 'member_id' })
   room_chats: RoomChat[];

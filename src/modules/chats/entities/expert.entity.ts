@@ -41,13 +41,16 @@ export class Expert {
   @Column()
   created_token: string;
 
-  // --- RELATIONS
-  // Member
+  /**
+   * Relation: Member
+   */
   @ManyToOne((type) => Member, (member) => member.experts)
   @JoinColumn({ name: 'member_id' })
   member: Member;
 
-  // RoomChats
+  /**
+   * Relation: RoomChats
+   */
   @OneToMany((type) => RoomChat, (room_chat) => room_chat.expert)
   @JoinColumn({ name: 'expert_id' })
   room_chats: RoomChat[];

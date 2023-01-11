@@ -32,18 +32,23 @@ export class RoomChat {
   @UpdateDateColumn()
   updated: string;
 
-  // --- RELATIONS
-  // Member
+  /**
+   * Relation: Member
+   */
   @ManyToOne((type) => Member, (member) => member.room_chats)
   @JoinColumn({ name: 'member_id' })
   member: Member;
 
-  // Expert
+  /**
+   * Relation: Expert
+   */
   @ManyToOne((type) => Expert, (expert) => expert.room_chats)
   @JoinColumn({ name: 'expert_id' })
   expert: Member;
 
-  // RoomChatDetails
+  /**
+   * Relation: RoomChatDetail
+   */
   @OneToMany(
     (type) => RoomChatDetail,
     (room_chat_detail) => room_chat_detail.room_chat,
