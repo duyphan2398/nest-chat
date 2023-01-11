@@ -2,7 +2,7 @@ import {Module} from '@nestjs/common';
 import {TypeOrmModule} from '@nestjs/typeorm';
 import {ConfigModule} from '@nestjs/config';
 import {TypeOrmConfig} from './typeorm/typeorm-config';
-import {MembersModule} from './modules/members/members.module';
+import {ChatsModule} from "./modules/chats/chats.module";
 import {AcceptLanguageResolver, I18nModule, QueryResolver} from 'nestjs-i18n';
 import { HttpExceptionFilter } from "./core/exceptions/http-exception.filter";
 import {APP_FILTER, APP_GUARD} from "@nestjs/core";
@@ -22,7 +22,7 @@ import {Global} from "@nestjs/common";
         I18nModule.forRoot({
             fallbackLanguage: process.env.FALLBACK_LANGUAGE || 'en',
             loaderOptions: {
-                path: path.join(__dirname, '/i18n/'),
+                path: path.join(__dirname, '/dictionaries/'),
                 watch: true,
             },
             resolvers: [
@@ -34,7 +34,7 @@ import {Global} from "@nestjs/common";
             ],
         }),
 
-        MembersModule,
+        ChatsModule,
     ],
     controllers: [],
     providers: [

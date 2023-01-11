@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import {InjectRepository} from "@nestjs/typeorm";
 import {Member} from "../entities/member.entity";
 import {Repository} from "typeorm";
-import {MemberIsVerify, MemberStatus} from "../enums/member.enum";
+import {MemberIsVerify, MemberStatus} from "../enums/members.enum";
 
 @Injectable()
 export class MembersService  {

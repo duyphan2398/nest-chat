@@ -1,13 +1,13 @@
 import { CanActivate, ExecutionContext, Inject, UnauthorizedException } from '@nestjs/common';
-import {MembersService} from "../modules/chats/services/members.service";
+import {ExpertsService} from "../modules/chats/services/experts.service";
 import { I18nContext } from "nestjs-i18n";
 import * as moment from 'moment';
-import { TOKEN_EXPIRED_TIME} from "../modules/chats/enums/members.enum";
+import { TOKEN_EXPIRED_TIME} from "../modules/chats/enums/experts.enum";
 import {RequestInterface} from "../core/request/request.interface";
 
-export class MemberAuthGuard implements CanActivate {
+export class ExpertAuthGuard implements CanActivate {
   constructor(
-      @Inject(MembersService) private readonly membersService: MembersService
+      @Inject(ExpertsService) private readonly exportsService: ExpertsService
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -21,23 +21,24 @@ export class MemberAuthGuard implements CanActivate {
       throw new UnauthorizedException(i18n.t('auth-error-messages.TOKEN_EMPTY'));
     }
 
-    const authMember = await this.membersService.findByToken(token);
+    const authExpert = await this.exportsService.findByToken(token);
 
-    // Check empty member
-    if (!authMember) {
+
+    // Check empty expert
+    if (!authExpert) {
       throw new UnauthorizedException(i18n.t('auth-error-messages.TOKEN_WRONG'));
     }
 
 
     // Check token expired
-    const expiredTime = moment(authMember.created_token).add(TOKEN_EXPIRED_TIME.SECONDS, 'seconds')
+    const expiredTime = moment(authExpert.created_token).add(TOKEN_EXPIRED_TIME.SECONDS, 'seconds')
     const diffTime = moment().diff(expiredTime, 'seconds');
-    if (!authMember.created_token || diffTime > 0 ) {
+    if (!authExpert.created_token || diffTime > 0 ) {
       throw new UnauthorizedException(i18n.t('auth-error-messages.TOKEN_EXPIRED'));
     }
 
-    // Assign global auth member
-    request.authMember = authMember;
+    // Assign global auth expert
+    request.authExpert = authExpert;
 
     return true;
   }

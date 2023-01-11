@@ -1,5 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn } from "typeorm";
-
+import {Entity, Column, PrimaryGeneratedColumn, OneToMany, JoinColumn} from "typeorm";
+import {Expert} from "./expert.entity";
 
 @Entity('ape_members')
 export class Member {
@@ -34,7 +34,6 @@ export class Member {
     avatar: string;
 
 
-
     @Column()
     token: string;
 
@@ -46,4 +45,10 @@ export class Member {
 
     @Column()
     status: string;
+
+    // --- RELATIONS
+    // Expert
+    @OneToMany(type => Expert, expert => expert.member)
+    @JoinColumn({ name: "expert_id" })
+    experts: Expert[];
 }
