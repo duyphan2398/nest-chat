@@ -5,16 +5,17 @@ import {
   Param,
   UseGuards,
   Req,
-  Inject
+  Inject,
 } from '@nestjs/common';
-import {RequestInterface} from "../../../core/request/request.interface";
-import {ExpertAuthGuard} from "../../../guards/expert-auth.guard";
-import {ExpertsService} from "../services/experts.service";
-
+import { RequestInterface } from '../../../core/request/request.interface';
+import { ExpertAuthGuard } from '../../../guards/expert-auth.guard';
+import { ExpertsService } from '../services/experts.service';
 
 @Controller('expert')
 export class ExpertsController {
-  constructor(@Inject(ExpertsService) private readonly expertsService: ExpertsService) {}
+  constructor(
+    @Inject(ExpertsService) private readonly expertsService: ExpertsService,
+  ) {}
 
   @Post()
   @UseGuards(ExpertAuthGuard)
@@ -26,6 +27,6 @@ export class ExpertsController {
   @Get(':id')
   @UseGuards(ExpertAuthGuard)
   async findOne(@Param('id') id: string) {
-    return  await this.expertsService.findOne(+id);
+    return await this.expertsService.findOne(+id);
   }
 }

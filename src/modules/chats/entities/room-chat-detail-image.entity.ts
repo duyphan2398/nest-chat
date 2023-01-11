@@ -1,42 +1,51 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from "typeorm";
-import {Member} from "./member.entity";
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  JoinColumn,
+  OneToOne,
+} from 'typeorm';
+import { RoomChat } from './room-chat.entity';
+import { RoomChatDetail } from './room-chat-detail.entity';
 
-@Entity('ape_experts')
-export class Expert {
+@Entity('ape_room_chat_detail_images')
+export class RoomChatDetailImage {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @PrimaryGeneratedColumn()
-    id: number;
+  @Column()
+  name: string;
 
-    @Column()
-    name: string;
+  @Column()
+  description: string;
 
-    @Column()
-    description: string;
+  @Column()
+  job_title: string;
 
-    @Column()
-    job_title: string;
+  @Column()
+  expert_avatar: string;
 
-    @Column()
-    expert_avatar: string;
+  @Column()
+  member_id: number;
 
-    @Column()
-    member_id: number;
+  @Column()
+  is_admin: number;
 
-    @Column()
-    is_admin: number;
+  @Column()
+  status: string;
 
-    @Column()
-    status: string;
+  @Column()
+  token: string;
 
-    @Column()
-    token: string;
+  @Column()
+  created_token: string;
 
-    @Column()
-    created_token: string;
-
-    // --- RELATIONS
-    // Member
-    @ManyToOne(type => Member, member => member.experts)
-    @JoinColumn({ name: "member_id" })
-    member: Member;
+  // --- RELATIONS
+  // RoomChatDetail
+  @OneToOne(
+    (type) => RoomChatDetail,
+    (room_chat_detail) => room_chat_detail.room_chat_detail_image,
+  )
+  @JoinColumn({ name: 'room_chat_detail_id' })
+  room_chat_detail: RoomChat;
 }
