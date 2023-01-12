@@ -7,13 +7,14 @@ import {
   UpdateDateColumn,
   CreateDateColumn,
   OneToMany,
+  BaseEntity,
 } from 'typeorm';
 import { Member } from './member.entity';
 import { Expert } from './expert.entity';
 import { RoomChatDetail } from './room-chat-detail.entity';
 
 @Entity('ape_room_chats')
-export class RoomChat {
+export class RoomChat extends BaseEntity  {
   @PrimaryGeneratedColumn()
   id: number;
 

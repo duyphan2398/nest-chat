@@ -5,13 +5,13 @@ import {
   JoinColumn,
   OneToOne,
   CreateDateColumn,
-  UpdateDateColumn,
+  UpdateDateColumn, BaseEntity,
 } from 'typeorm';
 import { RoomChat } from './room-chat.entity';
 import { RoomChatDetail } from './room-chat-detail.entity';
 
 @Entity('ape_room_chat_detail_images')
-export class RoomChatDetailImage {
+export class RoomChatDetailImage extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 

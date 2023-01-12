@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Expert } from '../entities/expert.entity';
 import { Repository } from 'typeorm';
 import { ExpertStatus } from '../enums/experts.enum';
-import { Member } from '../entities/member.entity';
 
 @Injectable()
 export class ExpertsService {
@@ -15,8 +14,13 @@ export class ExpertsService {
     return await this.expertsRepo.find();
   }
 
-  async findOne(id): Promise<Expert> {
-    return await this.expertsRepo.findOneById(id);
+  async findById(id): Promise<Expert> {
+    return await this.expertsRepo.findOne({
+      where: {
+        id,
+        status: ExpertStatus.ENABLE
+      },
+    })
   }
 
   async findByToken(token: string): Promise<Expert> {

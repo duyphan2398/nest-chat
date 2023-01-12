@@ -5,12 +5,13 @@ import {
   ManyToOne,
   JoinColumn,
   OneToMany,
+  BaseEntity,
 } from 'typeorm';
 import { Member } from './member.entity';
 import { RoomChat } from './room-chat.entity';
 
 @Entity('ape_experts')
-export class Expert {
+export class Expert extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -33,7 +34,7 @@ export class Expert {
   is_admin: number;
 
   @Column()
-  status: string;
+  status: number;
 
   @Column()
   token: string;

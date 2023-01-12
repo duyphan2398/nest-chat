@@ -24,9 +24,9 @@ export class ExpertsController {
     return await this.expertsService.findAll();
   }
 
-  @Get(':id')
-  @UseGuards(ExpertAuthGuard)
-  async findOne(@Param('id') id: string) {
-    return await this.expertsService.findOne(+id);
-  }
+  // @Get(':id')
+  // @UseGuards(ExpertAuthGuard)
+  // async findOne(@Param('id') id: string) {
+  //   return await this.expertsService.findOne(+id);
+  // }
 }

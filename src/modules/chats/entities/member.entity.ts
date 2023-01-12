@@ -3,13 +3,13 @@ import {
   Column,
   PrimaryGeneratedColumn,
   OneToMany,
-  JoinColumn,
+  JoinColumn, BaseEntity,
 } from 'typeorm';
 import { Expert } from './expert.entity';
 import { RoomChat } from './room-chat.entity';
 
 @Entity('ape_members')
-export class Member {
+export class Member extends BaseEntity  {
   @PrimaryGeneratedColumn()
   id: number;
 
