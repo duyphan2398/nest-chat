@@ -18,9 +18,9 @@ export class ExpertsService {
     return await this.expertsRepo.findOne({
       where: {
         id,
-        status: ExpertStatus.ENABLE
+        status: ExpertStatus.ENABLE,
       },
-    })
+    });
   }
 
   async findByToken(token: string): Promise<Expert> {

@@ -14,7 +14,7 @@ import { Expert } from './expert.entity';
 import { RoomChatDetail } from './room-chat-detail.entity';
 
 @Entity('ape_room_chats')
-export class RoomChat extends BaseEntity  {
+export class RoomChat extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 

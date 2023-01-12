@@ -1,22 +1,33 @@
 import {
-    ValidatorConstraint,
-    ValidatorConstraintInterface,
-    ValidationArguments
+  ValidatorConstraint,
+  ValidatorConstraintInterface,
+  ValidationOptions,
+  registerDecorator,
 } from 'class-validator';
-import { ExpertsService} from "../services/experts.service";
-import {Injectable, Inject} from "@nestjs/common";
+import { ExpertsService } from '../services/experts.service';
+import { Injectable } from '@nestjs/common';
 
-@ValidatorConstraint({ name: 'isExpertExist',async: true })
+@ValidatorConstraint({ name: 'isExpertExist', async: true })
 @Injectable()
-export class IsExpertExist implements ValidatorConstraintInterface {
-    constructor(
-        private readonly expertsService: ExpertsService,
-    ) {}
+export class IsExpertExistConstraint implements ValidatorConstraintInterface {
+  constructor(private readonly expertsService: ExpertsService) {}
 
-    validate(id: number, args: ValidationArguments) {
-        console.log(this.expertsService)
-        return this.expertsService.findById(id).then((expert) => {
-            return !expert;
-        });
-    }
+  validate(id: number) {
+    console.log(this.expertsService);
+    return this.expertsService.findById(id).then((expert) => {
+      return !expert;
+    });
+  }
+}
+
+export function IsExpertExist(validationOptions?: ValidationOptions) {
+  return function (object: object, propertyName: string) {
+    registerDecorator({
+      target: object.constructor,
+      propertyName: propertyName,
+      options: validationOptions,
+      constraints: [],
+      validator: IsExpertExistConstraint,
+    });
+  };
 }

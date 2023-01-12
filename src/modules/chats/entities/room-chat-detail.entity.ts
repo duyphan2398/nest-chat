@@ -6,7 +6,8 @@ import {
   JoinColumn,
   OneToOne,
   CreateDateColumn,
-  UpdateDateColumn, BaseEntity,
+  UpdateDateColumn,
+  BaseEntity,
 } from 'typeorm';
 import { Member } from './member.entity';
 import { RoomChat } from './room-chat.entity';
