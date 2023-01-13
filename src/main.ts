@@ -10,7 +10,11 @@ async function bootstrap() {
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
 
   // Use Pipes
-  app.useGlobalPipes(new I18nValidationPipe());
+  app.useGlobalPipes(
+      new I18nValidationPipe({
+        whitelist: true
+      }),
+  );
 
   // Use Filter
   app.useGlobalFilters(new I18nValidationExceptionFilter());

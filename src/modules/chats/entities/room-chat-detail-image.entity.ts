@@ -4,12 +4,10 @@ import {
   PrimaryGeneratedColumn,
   JoinColumn,
   OneToOne,
-  CreateDateColumn,
-  UpdateDateColumn,
-  BaseEntity,
 } from 'typeorm';
 import { RoomChat } from './room-chat.entity';
 import { RoomChatDetail } from './room-chat-detail.entity';
+import {BaseEntity} from "./base.entity";
 
 @Entity('ape_room_chat_detail_images')
 export class RoomChatDetailImage extends BaseEntity {
@@ -30,12 +28,6 @@ export class RoomChatDetailImage extends BaseEntity {
 
   @Column()
   height: number;
-
-  @CreateDateColumn()
-  created: string;
-
-  @UpdateDateColumn()
-  updated: string;
 
   /**
    * Relation: RoomChatDetail

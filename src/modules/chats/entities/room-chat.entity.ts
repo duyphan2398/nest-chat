@@ -4,17 +4,16 @@ import {
   PrimaryGeneratedColumn,
   ManyToOne,
   JoinColumn,
-  UpdateDateColumn,
-  CreateDateColumn,
   OneToMany,
-  BaseEntity,
 } from 'typeorm';
 import { Member } from './member.entity';
 import { Expert } from './expert.entity';
 import { RoomChatDetail } from './room-chat-detail.entity';
+import {BaseEntity} from "./base.entity";
 
 @Entity('ape_room_chats')
 export class RoomChat extends BaseEntity {
+
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -26,12 +25,6 @@ export class RoomChat extends BaseEntity {
 
   @Column()
   status: string;
-
-  @CreateDateColumn()
-  created: string;
-
-  @UpdateDateColumn()
-  updated: string;
 
   /**
    * Relation: Member

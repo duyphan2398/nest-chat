@@ -74,7 +74,7 @@ export class Responder {
   ) {
     return {
       code: 404,
-      status: true,
+      status: false,
       message,
     };
   }
@@ -91,7 +91,7 @@ export class Responder {
   ) {
     return {
       code,
-      status: true,
+      status: false,
       message,
     };
   }

@@ -5,13 +5,10 @@ import {
   ManyToOne,
   JoinColumn,
   OneToOne,
-  CreateDateColumn,
-  UpdateDateColumn,
-  BaseEntity,
 } from 'typeorm';
-import { Member } from './member.entity';
 import { RoomChat } from './room-chat.entity';
 import { RoomChatDetailImage } from './room-chat-detail-image.entity';
+import {BaseEntity} from "./base.entity";
 
 @Entity('ape_room_chat_details')
 export class RoomChatDetail extends BaseEntity {
@@ -47,12 +44,6 @@ export class RoomChatDetail extends BaseEntity {
 
   @Column()
   type: string;
-
-  @CreateDateColumn()
-  created: string;
-
-  @UpdateDateColumn()
-  updated: string;
 
   /**
    * Relation: RoomChats
