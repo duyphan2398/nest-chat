@@ -13,6 +13,7 @@ import { RoomChatDetailImage } from './entities/room-chat-detail-image.entity';
 import { RoomChatsController } from './controllers/room-chats.controller';
 import { RoomChatsService } from './services/room-chats.service';
 import { IsExpertExistConstraint } from './rules/exist-expert.rule';
+import {ChatGateway} from "./gateways/chat.gateway";
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { IsExpertExistConstraint } from './rules/exist-expert.rule';
     ExpertsService,
     RoomChatsService,
     Responder,
+    ChatGateway
   ],
   exports: [MembersService, ExpertsService],
 })
