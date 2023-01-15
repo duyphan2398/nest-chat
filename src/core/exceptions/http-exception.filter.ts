@@ -24,9 +24,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     };
     this.addErrorForeachException(returnData, exception);
 
-    response
-        .status(HttpStatus.OK)
-        .json(returnData);
+    response.status(HttpStatus.OK).json(returnData);
   }
 
   addErrorForeachException(returnData, exception) {

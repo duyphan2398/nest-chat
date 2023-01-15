@@ -11,9 +11,9 @@ async function bootstrap() {
 
   // Use Pipes
   app.useGlobalPipes(
-      new I18nValidationPipe({
-        whitelist: true
-      }),
+    new I18nValidationPipe({
+      whitelist: true,
+    }),
   );
 
   // Use Filter

@@ -2,11 +2,13 @@ import {
   ValidatorConstraint,
   ValidatorConstraintInterface,
   ValidationOptions,
-  registerDecorator, ValidationArguments, isInstance,
+  registerDecorator,
+  ValidationArguments,
+  isInstance,
 } from 'class-validator';
 import { ExpertsService } from '../services/experts.service';
 import { Injectable } from '@nestjs/common';
-import {Expert} from "../entities/expert.entity";
+import { Expert } from '../entities/expert.entity';
 
 @ValidatorConstraint({ name: 'isExpertExist', async: true })
 @Injectable()

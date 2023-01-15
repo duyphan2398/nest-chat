@@ -8,7 +8,7 @@ import {
 } from 'typeorm';
 import { RoomChat } from './room-chat.entity';
 import { RoomChatDetailImage } from './room-chat-detail-image.entity';
-import {BaseEntity} from "./base.entity";
+import { BaseEntity } from './base.entity';
 
 @Entity('ape_room_chat_details')
 export class RoomChatDetail extends BaseEntity {
