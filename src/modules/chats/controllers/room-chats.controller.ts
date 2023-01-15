@@ -5,8 +5,9 @@ import {
   Req,
   Inject,
   Body,
-  BadRequestException,
-  HttpException,
+  Get,
+  ClassSerializerInterceptor,
+  UseInterceptors,
 } from '@nestjs/common';
 import { MemberAuthGuard } from '../../../guards/member-auth.guard';
 import { RequestInterface } from '../../../core/request/request.interface';
@@ -14,7 +15,6 @@ import { Responder } from '../../../core/response/responder.response';
 import { RoomChatsService } from '../services/room-chats.service';
 import { CreateRoomChatDto } from '../dto/members/create-room-chat.dto';
 import { I18nService } from 'nestjs-i18n';
-import { RoomChat } from '../entities/room-chat.entity';
 
 @Controller()
 export class RoomChatsController {
@@ -25,9 +25,20 @@ export class RoomChatsController {
     @Inject(I18nService) private i18n: I18nService,
   ) {}
 
+  @UseInterceptors(ClassSerializerInterceptor)
+  @Get('api/room-chats')
+  @UseGuards(MemberAuthGuard)
+  async apiGetList(@Req() request: RequestInterface) {
+    const authMember = request.authMember;
+    const roomChats = await this.roomChatsService.getListRoomChatByMemberId(
+      authMember.id,
+    );
+    return this.responder.httpOK(roomChats);
+  }
+
   @Post('api/room-chats')
   @UseGuards(MemberAuthGuard)
-  async create(
+  async apiCreate(
     @Req() request: RequestInterface,
     @Body() createChatRoomDto: CreateRoomChatDto,
   ) {

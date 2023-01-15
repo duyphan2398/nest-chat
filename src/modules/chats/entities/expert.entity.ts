@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { Member } from './member.entity';
 import { RoomChat } from './room-chat.entity';
+import { Exclude } from 'class-transformer';
 
 @Entity('ape_experts')
 export class Expert extends BaseEntity {
@@ -27,6 +28,7 @@ export class Expert extends BaseEntity {
   @Column()
   expert_avatar: string;
 
+  @Exclude()
   @Column()
   member_id: number;
 
@@ -36,9 +38,11 @@ export class Expert extends BaseEntity {
   @Column()
   status: number;
 
+  @Exclude()
   @Column()
   token: string;
 
+  @Exclude()
   @Column()
   created_token: string;
 
