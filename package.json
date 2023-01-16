@@ -36,6 +36,7 @@
     "moment-timezone": "^0.5.40",
     "mysql2": "^2.3.3",
     "nestjs-i18n": "^10.2.4",
+    "nestjs-typeorm-paginate": "^4.0.3",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.2.0",
     "typeorm": "^0.3.11"

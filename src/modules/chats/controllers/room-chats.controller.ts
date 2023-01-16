@@ -25,16 +25,16 @@ export class RoomChatsController {
     @Inject(I18nService) private i18n: I18nService,
   ) {}
 
-  @UseInterceptors(ClassSerializerInterceptor)
-  @Get('api/room-chats')
-  @UseGuards(MemberAuthGuard)
-  async apiGetList(@Req() request: RequestInterface) {
-    const authMember = request.authMember;
-    const roomChats = await this.roomChatsService.getListRoomChatByMemberId(
-      authMember.id,
-    );
-    return this.responder.httpOK(roomChats);
-  }
+  // @UseInterceptors(ClassSerializerInterceptor)
+  // @Get('api/room-chats')
+  // @UseGuards(MemberAuthGuard)
+  // async apiGetList(@Req() request: RequestInterface) {
+  //   const authMember = request.authMember;
+  //   const roomChats = await this.roomChatsService.getListRoomChatByMemberId(
+  //     authMember.id,
+  //   );
+  //   return this.responder.httpOK(roomChats);
+  // }
 
   @Post('api/room-chats')
   @UseGuards(MemberAuthGuard)

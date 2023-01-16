@@ -1,7 +1,7 @@
 import {
     WebSocketGateway,
     WebSocketServer,
-    OnGatewayConnection, OnGatewayDisconnect,
+    OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage,
 } from '@nestjs/websockets';
 import {
     ClassSerializerInterceptor,
@@ -36,7 +36,7 @@ export class ApiChatGateway
         try {
             const member = await this.membersService.verifyToken(token);
             socket.data.member = member;
-            const rooms = await this.roomChatsService.getListRoomChatByMemberId(member.id);
+            const rooms = await this.roomChatsService.getListRoomChatByMemberId(member.id, { page: 1, limit: 10 });
 
             await this.connectedMemberService.save({connected_id: socket.id, member_id: member.id});
 
@@ -59,5 +59,19 @@ export class ApiChatGateway
         socket.disconnect();
     }
 
+    @SubscribeMessage('createRoom')
+    async onCreateRoom(socket: Socket, room) {
+        const createdRoom: RoomI = await this.roomChatsService.create(room, socket.data.user);
+
+        for (const user of createdRoom.users) {
+            const connections: ConnectedUserI[] = await this.connectedUserService.findByUser(user);
+            const rooms = await this.roomService.getRoomsForUser(user.id, { page: 1, limit: 10 });
+            // substract page -1 to match the angular material paginator
+            rooms.meta.currentPage = rooms.meta.currentPage - 1;
+            for (const connection of connections) {
+                await this.server.to(connection.socketId).emit('rooms', rooms);
+            }
+        }
+    }
 
 }

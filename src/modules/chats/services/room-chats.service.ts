@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RoomChat } from '../entities/room-chat.entity';
 import { ExpertStatus } from '../enums/experts.enum';
+import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
 
 @Injectable()
 export class RoomChatsService {
@@ -10,15 +11,17 @@ export class RoomChatsService {
     @InjectRepository(RoomChat) private roomChatsRepo: Repository<RoomChat>,
   ) {}
 
-  async getListRoomChatByMemberId(memberId): Promise<RoomChat[]> {
-    return await this.roomChatsRepo
+  async getListRoomChatByMemberId(memberId, options: IPaginationOptions): Promise<Pagination<RoomChat>> {
+    const queryBuilder =  await this.roomChatsRepo
       .createQueryBuilder('room_chat')
       .leftJoinAndSelect('room_chat.expert', 'expert')
       .where('room_chat.member_id = :member_id', { member_id: memberId })
       .where('expert.status = :expert_status', {
         expert_status: ExpertStatus.ENABLE,
       })
-      .getMany();
+      .orderBy('room_chat.updated', 'DESC');
+
+    return paginate(queryBuilder, options)
   }
 
   async findByConditions(condition: object): Promise<RoomChat> {
