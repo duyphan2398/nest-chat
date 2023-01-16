@@ -5,7 +5,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import {Member} from "./member.entity";
+import { Member } from './member.entity';
 import { BaseEntity } from './base.entity';
 
 @Entity('ape_connected_members')
@@ -18,7 +18,6 @@ export class ConnectedMember extends BaseEntity {
 
   @Column()
   connected_id: string;
-
 
   /**
    * Relation: Member

@@ -5,7 +5,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import {Expert} from "./expert.entity";
+import { Expert } from './expert.entity';
 import { BaseEntity } from './base.entity';
 
 @Entity('ape_connected_experts')

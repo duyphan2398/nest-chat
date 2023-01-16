@@ -1,10 +1,10 @@
-import {Inject, Injectable, UnauthorizedException} from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Expert } from '../entities/expert.entity';
 import { Repository } from 'typeorm';
-import {ExpertStatus, TOKEN_EXPIRED_TIME} from '../enums/experts.enum';
-import * as moment from "moment/moment";
-import {I18nService} from "nestjs-i18n";
+import { ExpertStatus, TOKEN_EXPIRED_TIME } from '../enums/experts.enum';
+import * as moment from 'moment/moment';
+import { I18nService } from 'nestjs-i18n';
 
 @Injectable()
 export class ExpertsService {
@@ -34,36 +34,35 @@ export class ExpertsService {
       .getOne();
   }
 
-
-  async verifyToken(token: string|null): Promise<Expert> {
+  async verifyToken(token: string | null): Promise<Expert> {
     if (!token) {
       throw new UnauthorizedException(
-          this.i18n.t('auth-error-messages.TOKEN_EMPTY'),
+        this.i18n.t('auth-error-messages.TOKEN_EMPTY'),
       );
     }
 
-    let authExpert = await this.findByToken(token);
+    const authExpert = await this.findByToken(token);
 
     // Check empty expert
     if (!authExpert) {
       throw new UnauthorizedException(
-          this.i18n.t('auth-error-messages.TOKEN_WRONG'),
+        this.i18n.t('auth-error-messages.TOKEN_WRONG'),
       );
     }
 
     // Check token expired
     const expiredTime = moment(authExpert.created_token).add(
-        TOKEN_EXPIRED_TIME.SECONDS,
-        'seconds',
+      TOKEN_EXPIRED_TIME.SECONDS,
+      'seconds',
     );
     const diffTime = moment().diff(expiredTime, 'seconds');
 
     if (!authExpert.created_token || diffTime > 0) {
       throw new UnauthorizedException(
-          this.i18n.t('auth-error-messages.TOKEN_EXPIRED'),
+        this.i18n.t('auth-error-messages.TOKEN_EXPIRED'),
       );
     }
 
-    return authExpert
+    return authExpert;
   }
 }

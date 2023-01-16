@@ -8,8 +8,8 @@ import {
 } from 'typeorm';
 import { Expert } from './expert.entity';
 import { RoomChat } from './room-chat.entity';
-import {Exclude, Expose, Transform} from 'class-transformer';
-import {ConnectedMember} from "./connected-member.entity";
+import { Exclude, Expose, Transform } from 'class-transformer';
+import { ConnectedMember } from './connected-member.entity';
 
 @Entity('ape_members')
 export class Member extends BaseEntity {
@@ -40,14 +40,13 @@ export class Member extends BaseEntity {
   @Column()
   birthday: string;
 
-  @Column(
-      {
-        transformer: {
-          to: (value: string) => value,
-          from: (value: string) => value ? process.env.IMAGE_SERVER_DOMAIN + value : '',
-        },
-      }
-  )
+  @Column({
+    transformer: {
+      to: (value: string) => value,
+      from: (value: string) =>
+        value ? process.env.IMAGE_SERVER_DOMAIN + value : '',
+    },
+  })
   avatar: string;
 
   @Exclude()
@@ -81,7 +80,10 @@ export class Member extends BaseEntity {
   /**
    * Relation: ConnectedMembers
    */
-  @OneToMany((type) => ConnectedMember, (connected_member) => connected_member.member)
+  @OneToMany(
+    (type) => ConnectedMember,
+    (connected_member) => connected_member.member,
+  )
   @JoinColumn({ name: 'member_id' })
   connected_members: ConnectedMember[];
 }

@@ -1,8 +1,4 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  Inject,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Inject } from '@nestjs/common';
 import { ExpertsService } from '../modules/chats/services/experts.service';
 import { RequestInterface } from '../core/request/request.interface';
 
