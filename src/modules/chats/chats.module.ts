@@ -13,7 +13,11 @@ import { RoomChatDetailImage } from './entities/room-chat-detail-image.entity';
 import { RoomChatsController } from './controllers/room-chats.controller';
 import { RoomChatsService } from './services/room-chats.service';
 import { IsExpertExistConstraint } from './rules/exist-expert.rule';
-import { ChatGateway } from './gateways/chat.gateway';
+import { ApiChatGateway } from './gateways/api-chat.gateway';
+import {ConnectedMember} from "./entities/connected-member.entity";
+import {ConnectedExpert} from "./entities/connected-expert.entity";
+import {ConnectedExpertsService} from "./services/connected-experts.service";
+import {ConnectedMembersService} from "./services/connected-members.service";
 
 @Module({
   imports: [
@@ -23,16 +27,20 @@ import { ChatGateway } from './gateways/chat.gateway';
       RoomChat,
       RoomChatDetail,
       RoomChatDetailImage,
+      ConnectedMember,
+      ConnectedExpert
     ]),
   ],
   controllers: [MembersController, ExpertsController, RoomChatsController],
   providers: [
     IsExpertExistConstraint,
+    ConnectedExpertsService,
+    ConnectedMembersService,
     MembersService,
     ExpertsService,
     RoomChatsService,
     Responder,
-    ChatGateway,
+    ApiChatGateway,
   ],
   exports: [MembersService, ExpertsService],
 })
