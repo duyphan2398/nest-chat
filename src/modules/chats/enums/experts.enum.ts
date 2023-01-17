@@ -1,4 +1,4 @@
-export enum ExpertStatus {
+export enum EXPERT_STATUS {
   ENABLE = 1,
   DISABLE = 0,
 }

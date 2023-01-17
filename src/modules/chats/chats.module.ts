@@ -18,7 +18,8 @@ import { ConnectedMember } from './entities/connected-member.entity';
 import { ConnectedExpert } from './entities/connected-expert.entity';
 import { ConnectedExpertsService } from './services/connected-experts.service';
 import { ConnectedMembersService } from './services/connected-members.service';
-import {GatewayResponder} from "../../core/response/gateway.response";
+import { GatewayResponder } from '../../core/response/gateway.response';
+import { IsMemberExistConstraint } from './rules/exist-member.rule';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import {GatewayResponder} from "../../core/response/gateway.response";
   controllers: [MembersController, ExpertsController, RoomChatsController],
   providers: [
     IsExpertExistConstraint,
+    IsMemberExistConstraint,
     ConnectedExpertsService,
     ConnectedMembersService,
     MembersService,

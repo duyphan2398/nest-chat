@@ -58,10 +58,10 @@ export class Member extends BaseEntity {
   created_token: string;
 
   @Column()
-  is_verify: string;
+  is_verify: number;
 
   @Column()
-  status: string;
+  status: number;
 
   /**
    * Relation: Experts

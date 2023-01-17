@@ -3,8 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Member } from '../entities/member.entity';
 import { Repository } from 'typeorm';
 import {
-  MemberIsVerify,
-  MemberStatus,
+  MEMBER_IS_VERIFY,
+  MEMBER_STATUS,
   TOKEN_EXPIRED_TIME,
 } from '../enums/members.enum';
 import * as moment from 'moment/moment';
@@ -17,20 +17,29 @@ export class MembersService {
     @Inject(I18nService) private i18n: I18nService,
   ) {}
 
+  async findById(id): Promise<Member> {
+    return await this.membersRepo.findOne({
+      where: {
+        id,
+        status: MEMBER_STATUS.ENABLE,
+        is_verify: MEMBER_IS_VERIFY.VERIFY,
+      },
+    });
+  }
+
   async findByToken(token: string): Promise<Member> {
     return await this.membersRepo
       .createQueryBuilder('member')
-        .addSelect(['member.token', 'member.created_token'])
+      .addSelect(['member.token', 'member.created_token'])
       .where('member.token = :token', { token })
       .andWhere('member.is_verify = :is_verify', {
-        is_verify: MemberIsVerify.VERIFY,
+        is_verify: MEMBER_IS_VERIFY.VERIFY,
       })
-      .andWhere('member.status = :status', { status: MemberStatus.ENABLE })
+      .andWhere('member.status = :status', { status: MEMBER_STATUS.ENABLE })
       .getOne();
   }
 
   async verifyToken(token: string | null): Promise<Member> {
-
     // Check empty token
     if (!token) {
       throw new UnauthorizedException(

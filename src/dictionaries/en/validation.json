@@ -3,5 +3,6 @@
   "IsNumber": "{property} must be a number",
 
 
-  "IsExpertExist": "Expert is not exist"
+  "IsExpertExist": "Expert is not exist",
+  "IsMemberExist": "Member is not exist"
 }

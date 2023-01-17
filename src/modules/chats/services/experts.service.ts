@@ -2,7 +2,7 @@ import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Expert } from '../entities/expert.entity';
 import { Repository } from 'typeorm';
-import { ExpertStatus, TOKEN_EXPIRED_TIME } from '../enums/experts.enum';
+import { EXPERT_STATUS, TOKEN_EXPIRED_TIME } from '../enums/experts.enum';
 import * as moment from 'moment/moment';
 import { I18nService } from 'nestjs-i18n';
 
@@ -17,7 +17,7 @@ export class ExpertsService {
     return await this.expertsRepo.findOne({
       where: {
         id,
-        status: ExpertStatus.ENABLE,
+        status: EXPERT_STATUS.ENABLE,
       },
     });
   }
@@ -25,9 +25,9 @@ export class ExpertsService {
   async findByToken(token: string): Promise<Expert> {
     return await this.expertsRepo
       .createQueryBuilder('expert')
-        .addSelect(['expert.token', 'expert.created_token'])
+      .addSelect(['expert.token', 'expert.created_token'])
       .where('expert.token = :token', { token })
-      .andWhere('expert.status = :status', { status: ExpertStatus.ENABLE })
+      .andWhere('expert.status = :status', { status: EXPERT_STATUS.ENABLE })
       .getOne();
   }
 
