@@ -5,7 +5,7 @@ import {
   OnGatewayDisconnect,
   SubscribeMessage,
 } from '@nestjs/websockets';
-import { Inject } from '@nestjs/common';
+import {BadRequestException, Inject} from '@nestjs/common';
 import { Socket, Server } from 'socket.io';
 import { MembersService } from '../services/members.service';
 import { RoomChatsService } from '../services/room-chats.service';
@@ -14,6 +14,7 @@ import {ROUTE_PREFIX} from "../enums/chats.enum";
 import {ExpertsService} from "../services/experts.service";
 import {ConnectedExpertsService} from "../services/connected-experts.service";
 import {GatewayResponder} from "../../../core/response/gateway.response";
+import {CreateRoomChatDto} from "../dto/members/create-room-chat.dto";
 
 @WebSocketGateway({
   namespace: 'chat',
@@ -54,7 +55,11 @@ export class ChatGateway
     let rooms = [];
 
     try {
-      switch (this.routePrefix ) {
+      if (!token || !this.routePrefix) {
+        throw new BadRequestException('Please Fill Full Fields')
+      }
+
+      switch (this.routePrefix) {
 
         case ROUTE_PREFIX.MEMBER_PAGE:
           auth = await this.membersService.verifyToken(token);
@@ -79,7 +84,7 @@ export class ChatGateway
 
           break;
         default:
-
+          throw new BadRequestException('Route Prefix is invalid')
       }
 
       socket.data.auth = auth;
@@ -98,7 +103,7 @@ export class ChatGateway
 
 
   async handleDisconnect(socket: Socket) {
-    switch (this.routePrefix ) {
+    switch ( this.routePrefix ) {
 
       case ROUTE_PREFIX.MEMBER_PAGE:
         // remove connection from DB
@@ -114,19 +119,61 @@ export class ChatGateway
     socket.disconnect();
   }
 
-  @SubscribeMessage('createRoom')
-  async onCreateRoom(socket: Socket, room) {
-    // const createdRoom = await this.roomChatsService.save(room, socket.data.user,);
-    //
-    // for (const user of createdRoom.users) {
-    //   const connections: ConnectedUserI[] =
-    //     await this.connectedUserService.findByUser(user);
-    //   const rooms = await this.roomService.getRoomsForUser(user.id);
-    //   // substract page -1 to match the angular material paginator
-    //   rooms.meta.currentPage = rooms.meta.currentPage - 1;
-    //   for (const connection of connections) {
-    //     await this.server.to(connection.socketId).emit('rooms', rooms);
+  @SubscribeMessage('created-room')
+  async onCreateRoom(socket: Socket, { partner_id }) {
+    // try {
+    //   if (!partner_id) {
+    //     throw new BadRequestException('Please Fill Full Fields')
     //   }
+    //
+    //   switch ( this.routePrefix ) {
+    //
+    //     case ROUTE_PREFIX.MEMBER_PAGE:
+    //       let data = { member_id: authMember.id, partner_id };
+    //       const existRoomChat = await this.roomChatsService.findByConditions(data);
+    //
+    //       if (existRoomChat) {
+    //         return this.responder.httpBadRequest(
+    //             this.i18n.t('room-chat-error-messages.ROOM_CHAT'),
+    //         );
+    //       }
+    //
+    //       // Create new room chat
+    //       try {
+    //         const roomChat = await this.roomChatsService.save(data);
+    //         return this.responder.httpCreated(roomChat);
+    //       } catch (e) {
+    //         return this.responder.httpBadRequest(e.message);
+    //       }
+    //
+    //       break;
+    //
+    //     case ROUTE_PREFIX.SUPPLIER_DASHBOARD:
+    //
+    //       break;
+    //   }
+    //   const createdRoom = await this.roomChatsService.save(room, socket.data.user,);
+    //
+    //
+    //
+    //
+    //   //
+    //   // for (const user of createdRoom.users) {
+    //   //   const connections: ConnectedUserI[] =
+    //   //     await this.connectedUserService.findByUser(user);
+    //   //   const rooms = await this.roomService.getRoomsForUser(user.id);
+    //   //   // substract page -1 to match the angular material paginator
+    //   //   rooms.meta.currentPage = rooms.meta.currentPage - 1;
+    //   //   for (const connection of connections) {
+    //   //     await this.server.to(connection.socketId).emit('rooms', rooms);
+    //   //   }
+    //   // }
+    //
+    // } catch (exception) {
+    //   this.handleEmitErrorNotice(
+    //       socket,
+    //       'create-room',
+    //       this.gatewayResponder.badRequest(exception.message))
     // }
   }
 }

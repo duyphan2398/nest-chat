@@ -12,6 +12,16 @@ export class RoomChatsService {
   ) {}
 
   async getListRoomChatByMemberId(memberId): Promise<RoomChat[]> {
+
+    console.log( this.roomChatsRepo
+        .createQueryBuilder('room_chat')
+        .leftJoinAndSelect('room_chat.expert', 'expert')
+
+        .where('expert.status = :expert_status', {
+          expert_status: ExpertStatus.ENABLE,
+        })
+        .where('room_chat.member_id = :member_id', { member_id: memberId })
+        .orderBy('room_chat.updated', 'DESC').getQuery())
     return await this.roomChatsRepo
       .createQueryBuilder('room_chat')
       .leftJoinAndSelect('room_chat.expert', 'expert')
