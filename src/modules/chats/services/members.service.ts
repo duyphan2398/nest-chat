@@ -17,17 +17,10 @@ export class MembersService {
     @Inject(I18nService) private i18n: I18nService,
   ) {}
 
-  async findAll(): Promise<Member[]> {
-    return await this.membersRepo.find();
-  }
-
-  async findOne(id): Promise<Member> {
-    return await this.membersRepo.findOneById(id);
-  }
-
   async findByToken(token: string): Promise<Member> {
     return await this.membersRepo
       .createQueryBuilder('member')
+        .addSelect(['member.token', 'member.created_token'])
       .where('member.token = :token', { token })
       .andWhere('member.is_verify = :is_verify', {
         is_verify: MemberIsVerify.VERIFY,
@@ -37,6 +30,7 @@ export class MembersService {
   }
 
   async verifyToken(token: string | null): Promise<Member> {
+
     // Check empty token
     if (!token) {
       throw new UnauthorizedException(

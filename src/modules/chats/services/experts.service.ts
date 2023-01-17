@@ -13,10 +13,6 @@ export class ExpertsService {
     @Inject(I18nService) private i18n: I18nService,
   ) {}
 
-  async findAll(): Promise<Expert[]> {
-    return await this.expertsRepo.find();
-  }
-
   async findById(id): Promise<Expert> {
     return await this.expertsRepo.findOne({
       where: {
@@ -29,6 +25,7 @@ export class ExpertsService {
   async findByToken(token: string): Promise<Expert> {
     return await this.expertsRepo
       .createQueryBuilder('expert')
+        .addSelect(['expert.token', 'expert.created_token'])
       .where('expert.token = :token', { token })
       .andWhere('expert.status = :status', { status: ExpertStatus.ENABLE })
       .getOne();

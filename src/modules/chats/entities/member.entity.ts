@@ -50,11 +50,11 @@ export class Member extends BaseEntity {
   avatar: string;
 
   @Exclude()
-  @Column()
+  @Column({ select: false })
   token: string;
 
   @Exclude()
-  @Column()
+  @Column({ select: false })
   created_token: string;
 
   @Column()

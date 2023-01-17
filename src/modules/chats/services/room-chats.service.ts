@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RoomChat } from '../entities/room-chat.entity';
 import { ExpertStatus } from '../enums/experts.enum';
+import {MemberStatus} from "../enums/members.enum";
 
 @Injectable()
 export class RoomChatsService {
@@ -21,6 +22,22 @@ export class RoomChatsService {
       .orderBy('room_chat.updated', 'DESC')
       .getMany();
   }
+
+
+  async getListRoomChatByExpertId(expertId): Promise<RoomChat[]> {
+    return await this.roomChatsRepo
+        .createQueryBuilder('room_chat')
+        .leftJoinAndSelect('room_chat.member', 'member')
+        .where('room_chat.expert_id = :expert_id', { expert_id: expertId })
+        .where('member.status = :member_status', {
+          member_status: MemberStatus.ENABLE,
+        })
+        .orderBy('room_chat.updated', 'DESC')
+        .getMany();
+  }
+
+
+
 
   async findByConditions(condition: object): Promise<RoomChat> {
     return await this.roomChatsRepo.findOne({

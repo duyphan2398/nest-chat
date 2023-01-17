@@ -1,8 +1,8 @@
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
-import { I18nService } from 'nestjs-i18n';
+import { I18nContext, I18nService } from 'nestjs-i18n';
 
 @Injectable()
-export class Responder {
+export class GatewayResponder {
   constructor(@Inject(I18nService) private i18n: I18nService) {}
 
   /**
@@ -12,14 +12,13 @@ export class Responder {
    * @param message
    * @param code
    */
-  httpOK(
+  ok(
       data: object | object[] | null,
-      message = this.i18n.t('http-messages.OK'),
+      message = this.i18n.t('gateway-messages.OK'),
       code: number = HttpStatus.OK,
   ) {
     return {
       code,
-      status: true,
       message,
       data,
     };
@@ -32,14 +31,13 @@ export class Responder {
    * @param message
    * @param code
    */
-  httpCreated(
+  created(
       data: object | object[] | null,
-      message: string = this.i18n.t('http-messages.CREATED'),
+      message: string = this.i18n.t('gateway-messages.CREATED'),
       code: number = HttpStatus.CREATED,
   ) {
     return {
       code,
-      status: true,
       message,
       data,
     };
@@ -51,13 +49,12 @@ export class Responder {
    * @param message
    * @param code
    */
-  httpNoContent(
-      message: string = this.i18n.t('http-messages.NO_CONTENT'),
+  noContent(
+      message: string = this.i18n.t('gateway-messages.NO_CONTENT'),
       code: number = HttpStatus.NO_CONTENT,
   ) {
     return {
       code: 204,
-      status: true,
       message,
     };
   }
@@ -68,8 +65,8 @@ export class Responder {
    * @param message
    * @param code
    */
-  httpNotFound(
-      message: string = this.i18n.t('http-messages.NOT_FOUND'),
+  notFound(
+      message: string = this.i18n.t('gateway-messages.NOT_FOUND'),
       code: number = HttpStatus.NOT_FOUND,
   ) {
     return {
@@ -85,13 +82,28 @@ export class Responder {
    * @param message
    * @param code
    */
-  httpBadRequest(
+  badRequest(
       message: string = this.i18n.t('http-messages.BAD_REQUEST'),
       code: number = HttpStatus.BAD_REQUEST,
   ) {
     return {
       code,
-      status: false,
+      message,
+    };
+  }
+
+  /**
+   * Response: ok 401
+   *
+   * @param message
+   * @param code
+   */
+  unauthenticated(
+      message = this.i18n.t('gateway-messages.UNAUTHENTICATED'),
+      code: number = HttpStatus.UNAUTHORIZED,
+  ) {
+    return {
+      code,
       message,
     };
   }

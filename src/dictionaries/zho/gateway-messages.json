@@ -1,0 +1,8 @@
+{
+  "OK": "Ok",
+  "CREATED": "Created",
+  "NOT_CONTENT": "No Content",
+  "NOT_FOUND": "Not Found",
+  "BAD_REQUEST": "Bad Request",
+  "UNAUTHENTICATED": "Unauthenticated"
+}

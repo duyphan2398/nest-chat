@@ -47,11 +47,11 @@ export class Expert extends BaseEntity {
   status: number;
 
   @Exclude()
-  @Column()
+  @Column({ select: false })
   token: string;
 
   @Exclude()
-  @Column()
+  @Column({ select: false })
   created_token: string;
 
   /**
