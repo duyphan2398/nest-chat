@@ -4,12 +4,20 @@ import { Repository } from 'typeorm';
 import { RoomChat } from '../entities/room-chat.entity';
 import { EXPERT_STATUS } from '../enums/experts.enum';
 import { MEMBER_STATUS } from '../enums/members.enum';
+import {Expert} from "../entities/expert.entity";
 
 @Injectable()
 export class RoomChatsService {
   constructor(
     @InjectRepository(RoomChat) private roomChatsRepo: Repository<RoomChat>,
   ) {}
+
+  async findByConditions(condition: object, relations = []): Promise<RoomChat> {
+    return await this.roomChatsRepo.findOne({
+      where: condition,
+      relations
+    });
+  }
 
   async getListRoomChatByMemberId(memberId): Promise<RoomChat[]> {
     return await this.roomChatsRepo
@@ -33,12 +41,6 @@ export class RoomChatsService {
       })
       .orderBy('room_chat.updated', 'DESC')
       .getMany();
-  }
-
-  async findByConditions(condition: object): Promise<RoomChat> {
-    return await this.roomChatsRepo.findOne({
-      where: condition,
-    });
   }
 
   async save(data: object): Promise<RoomChat> {

@@ -37,7 +37,7 @@ export class RoomChat extends BaseEntity {
    */
   @ManyToOne((type) => Expert, (expert) => expert.room_chats)
   @JoinColumn({ name: 'expert_id' })
-  expert: Member;
+  expert: Expert;
 
   /**
    * Relation: RoomChatDetail

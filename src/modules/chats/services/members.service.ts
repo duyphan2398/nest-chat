@@ -9,6 +9,7 @@ import {
 } from '../enums/members.enum';
 import * as moment from 'moment/moment';
 import { I18nService } from 'nestjs-i18n';
+import {RoomChat} from "../entities/room-chat.entity";
 
 @Injectable()
 export class MembersService {
@@ -16,6 +17,12 @@ export class MembersService {
     @InjectRepository(Member) private membersRepo: Repository<Member>,
     @Inject(I18nService) private i18n: I18nService,
   ) {}
+
+  async findByConditions(condition: object): Promise<Member> {
+    return await this.membersRepo.findOne({
+      where: condition,
+    });
+  }
 
   async findById(id): Promise<Member> {
     return await this.membersRepo.findOne({
@@ -27,7 +34,7 @@ export class MembersService {
     });
   }
 
-  async findByToken(token: string): Promise<Member> {
+  private async findByToken(token: string): Promise<Member> {
     return await this.membersRepo
       .createQueryBuilder('member')
       .addSelect(['member.token', 'member.created_token'])

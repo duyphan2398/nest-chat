@@ -125,19 +125,48 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('created-room')
   async onCreatedRoom(socket: Socket, { id, member_id, expert_id }) {
-    console.log(id);
-    console.log(member_id);
-    console.log(expert_id);
-
-    for (const user of createdRoom.users) {
-      const connections: ConnectedUserI[] =
-        await this.connectedUserService.findByUser(user);
-      const rooms = await this.roomService.getRoomsForUser(user.id);
-      // substract page -1 to match the angular material paginator
-      rooms.meta.currentPage = rooms.meta.currentPage - 1;
-      for (const connection of connections) {
-        await this.server.to(connection.socketId).emit('rooms', rooms);
+    try {
+      let newRoom = await this.roomChatsService.findByConditions({ id }, ['member.connected_members', 'expert.connected_experts'])
+      if (!newRoom){
+        throw new BadRequestException('Room is not exist');
       }
+
+      // Emit to member
+      if (newRoom?.member?.connected_members){
+        let connectedMembers = newRoom.member.connected_members
+        let rooms = await this.roomChatsService.getListRoomChatByMemberId(
+            newRoom.member_id,
+        );
+        for (const connectedMember of connectedMembers) {
+          this.server.to(connectedMember.connected_id).emit('load-rooms', rooms);
+        }
+      }
+
+      // Emit to expert
+      if (newRoom?.expert?.connected_experts){
+        let connectedExperts = newRoom.member.connected_members
+        let rooms = await this.roomChatsService.getListRoomChatByExpertId(
+            newRoom.expert_id,
+        );
+        for (const connectedExpert of connectedExperts) {
+          this.server.to(connectedExpert.connected_id).emit('load-rooms', rooms);
+        }
+      }
+
+    } catch (e) {
+      console.log(e)
     }
+
+
+    // for (const user of createdRoom.users) {
+    //   const connections: ConnectedUserI[] =
+    //     await this.connectedUserService.findByUser(user);
+    //   const rooms = await this.roomService.getRoomsForUser(user.id);
+    //   // substract page -1 to match the angular material paginator
+    //   rooms.meta.currentPage = rooms.meta.currentPage - 1;
+    //   for (const connection of connections) {
+    //     await this.server.to(connection.socketId).emit('rooms', rooms);
+    //   }
+    // }
   }
 }

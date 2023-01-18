@@ -1,11 +1,12 @@
 import { IsNotEmpty, IsNumber } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsMemberExist } from '../../rules/exist-member.rule';
+import {IsExpertExist} from "../../rules/exist-expert.rule";
 
 export class ApiCreateRoomChatDto {
   @IsNotEmpty({ message: 'validation.IsNotEmpty' })
   @IsNumber({}, { message: 'validation.IsNumber' })
-  @IsMemberExist()
-  @ApiProperty({ required: true, description: "ID's member " })
-  member_id: number;
+  @IsExpertExist()
+  @ApiProperty({ required: true, description: "ID's expert " })
+  expert_id: number;
+
 }
