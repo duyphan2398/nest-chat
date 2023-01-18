@@ -6,6 +6,7 @@ import { RoomChatsService } from '../services/room-chats.service';
 import { ApiCreateRoomChatDto } from '../dto/api/api-create-room-chat.dto';
 import { I18nService } from 'nestjs-i18n';
 import { ExpertAuthGuard } from '../../../guards/expert-auth.guard';
+import {SupplierApiCreateRoomChatDto} from "../dto/supplier-api/supplier-api-create-room-chat.dto";
 
 @Controller()
 export class RoomChatsController {
@@ -45,7 +46,7 @@ export class RoomChatsController {
   @UseGuards(ExpertAuthGuard)
   async supplierApiCreate(
     @Req() request: RequestInterface,
-    @Body() createChatRoomDto: ApiCreateRoomChatDto,
+    @Body() createChatRoomDto: SupplierApiCreateRoomChatDto,
   ) {
     const authExpert = request.authExpert;
     const data = { expert_id: authExpert.id, ...createChatRoomDto };

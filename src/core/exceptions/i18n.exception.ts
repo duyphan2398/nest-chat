@@ -21,12 +21,12 @@ export class I18nException implements ExceptionFilter {
         let errorMessage = Object.values(firstError.constraints).shift()
 
         const returnData = {
-            code: status,
+            code: HttpStatus.UNPROCESSABLE_ENTITY,
             status: false,
             message: message || responseException,
             error: await this.i18n.t(errorMessage,  {args: { property: firstError.property } })
         };
 
-        response.status(HttpStatus.BAD_REQUEST).json(returnData);
+        return response.status(HttpStatus.OK).json(returnData);
     }
 }
