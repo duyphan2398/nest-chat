@@ -144,7 +144,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       // Emit to expert
       if (newRoom?.expert?.connected_experts){
-        let connectedExperts = newRoom.member.connected_members
+        let connectedExperts = newRoom.expert.connected_experts
         let rooms = await this.roomChatsService.getListRoomChatByExpertId(
             newRoom.expert_id,
         );
