@@ -25,6 +25,8 @@ import { GatewayResponder } from '../../../core/response/gateway.response';
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
   private routePrefix;
+  private sessionId;
+  private authUser;
 
   constructor(
     @Inject(MembersService) private readonly membersService: MembersService,
@@ -58,42 +60,46 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleConnection(socket: Socket) {
     const token = socket.handshake.headers.authorization || '';
     this.routePrefix = socket.handshake.query.route_prefix;
+    this.sessionId = socket.handshake.query.session_id;
     let auth = null;
     let rooms = [];
 
     try {
-      if (!token || !this.routePrefix) {
+      if (!token || !this.routePrefix || !this.sessionId) {
         throw new BadRequestException('Please Fill Full Fields');
       }
 
       switch (this.routePrefix) {
         case ROUTE_PREFIX.MEMBER_PAGE:
-          auth = await this.membersService.verifyToken(token);
+          this.authUser = await this.membersService.verifyToken(token);
           await this.connectedMembersService.save({
+            session_id: this.sessionId,
             connected_id: socket.id,
-            member_id: auth.id,
+            member_id: this.authUser.id,
           });
           rooms = await this.roomChatsService.getListRoomChatByMemberId(
-            auth.id,
+              this.authUser.id,
           );
+
+
+
           break;
 
         case ROUTE_PREFIX.SUPPLIER_DASHBOARD:
-          auth = await this.expertsService.verifyToken(token);
+          this.authUser = await this.expertsService.verifyToken(token);
           await this.connectedExpertsService.save({
+            session_id: this.sessionId,
             connected_id: socket.id,
-            expert_id: auth.id,
+            expert_id: this.authUser.id,
           });
           rooms = await this.roomChatsService.getListRoomChatByExpertId(
-            auth.id,
+              this.authUser.id,
           );
 
           break;
         default:
           throw new BadRequestException('Route Prefix is invalid');
       }
-
-      socket.data.auth = auth;
 
       socket.emit('load-rooms', rooms);
     } catch (exception) {
@@ -122,6 +128,40 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     socket.disconnect();
   }
+
+  @SubscribeMessage('logout')
+  async onLogout(socket: Socket) {
+    switch (this.routePrefix) {
+      case ROUTE_PREFIX.MEMBER_PAGE:
+        let connectedMembers = await this.connectedMembersService.findManyByConditions({
+          'session_id': this.sessionId,
+          'member_id' : this.authUser.id
+        });
+
+        if (connectedMembers) {
+          for (const connectedMember of connectedMembers) {
+            this.server.to(connectedMember.connected_id).emit('logout-and-clear-data');
+          }
+        }
+        break;
+
+      case ROUTE_PREFIX.SUPPLIER_DASHBOARD:
+        let connectedExperts = await this.connectedExpertsService.findManyByConditions({
+          'session_id': this.sessionId,
+          'member_id' : this.authUser.id
+        });
+
+        if (connectedExperts) {
+          for (const connectedExpert of connectedExperts) {
+            this.server.to(connectedExpert.connected_id).emit('logout-and-clear-data');
+          }
+        }
+        break;
+      default:
+        throw new BadRequestException('Route Prefix is invalid');
+    }
+  }
+
 
   @SubscribeMessage('created-room')
   async onCreatedRoom(socket: Socket, { id, member_id, expert_id }) {
@@ -156,17 +196,5 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     } catch (e) {
       console.log(e)
     }
-
-
-    // for (const user of createdRoom.users) {
-    //   const connections: ConnectedUserI[] =
-    //     await this.connectedUserService.findByUser(user);
-    //   const rooms = await this.roomService.getRoomsForUser(user.id);
-    //   // substract page -1 to match the angular material paginator
-    //   rooms.meta.currentPage = rooms.meta.currentPage - 1;
-    //   for (const connection of connections) {
-    //     await this.server.to(connection.socketId).emit('rooms', rooms);
-    //   }
-    // }
   }
 }

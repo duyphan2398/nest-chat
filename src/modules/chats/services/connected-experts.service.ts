@@ -13,6 +13,12 @@ export class ConnectedExpertsService {
     @Inject(I18nService) private i18n: I18nService,
   ) {}
 
+  async findManyByConditions(condition: object): Promise<ConnectedExpert[]> {
+    return await this.connectedExpertRepo.find({
+      where: condition,
+    });
+  }
+
   async save(data: object): Promise<ConnectedExpert> {
     const connectedExpert = this.connectedExpertRepo.create(data);
     return await this.connectedExpertRepo.save(connectedExpert);

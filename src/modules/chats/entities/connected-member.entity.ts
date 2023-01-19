@@ -19,6 +19,9 @@ export class ConnectedMember extends BaseEntity {
   @Column()
   connected_id: string;
 
+  @Column()
+  session_id: string;
+
   /**
    * Relation: Member
    */
