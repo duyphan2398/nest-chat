@@ -27,6 +27,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   private routePrefix;
   private sessionId;
   private authUser;
+  private memberRoomPrefix = (id, sessionId = '') =>
+    `member-${id}-${sessionId}`;
+  private supplierRoomPrefix = (id, sessionId = '') =>
+    `supplier-${id}-${sessionId}`;
 
   constructor(
     @Inject(MembersService) private readonly membersService: MembersService,
@@ -41,6 +45,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly gatewayResponder: GatewayResponder,
   ) {}
 
+  /**
+   * Event: success-notice
+   *
+   * Fire success notice to client
+   *
+   * @param socket
+   * @param nameOfEvent
+   * @param response
+   * @private
+   */
   private static handleEmitSuccessNotice(
     socket: Socket,
     nameOfEvent = '',
@@ -49,6 +63,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     socket.emit('success-notice', { nameOfEvent, ...response });
   }
 
+  /**
+   * Event: error-notice
+   *
+   * Fire error notice to client
+   *
+   * @param socket
+   * @param nameOfEvent
+   * @param response
+   * @private
+   */
   private static handleEmitErrorNotice(
     socket: Socket,
     nameOfEvent = '',
@@ -57,11 +81,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     socket.emit('error-notice', { nameOfEvent, ...response });
   }
 
+  /**
+   * Listener: connected
+   *
+   * Handle incoming connected
+   *
+   * @param socket
+   */
   async handleConnection(socket: Socket) {
     const token = socket.handshake.headers.authorization || '';
     this.routePrefix = socket.handshake.query.route_prefix;
     this.sessionId = socket.handshake.query.session_id;
-    let auth = null;
     let rooms = [];
 
     try {
@@ -72,29 +102,59 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       switch (this.routePrefix) {
         case ROUTE_PREFIX.MEMBER_PAGE:
           this.authUser = await this.membersService.verifyToken(token);
+
+          // Save connected into database
           await this.connectedMembersService.save({
             session_id: this.sessionId,
             connected_id: socket.id,
             member_id: this.authUser.id,
           });
+
+          // Get list rooms
           rooms = await this.roomChatsService.getListRoomChatByMemberId(
-              this.authUser.id,
+            this.authUser.id,
           );
 
+          // Join auth member room and auth member room by session id
+          console.log('Member');
+          console.log([
+            this.memberRoomPrefix(this.authUser.id),
+            this.memberRoomPrefix(this.authUser.id, this.sessionId),
+          ]);
 
+          socket.join([
+            this.memberRoomPrefix(this.authUser.id),
+            this.memberRoomPrefix(this.authUser.id, this.sessionId),
+          ]);
 
           break;
 
         case ROUTE_PREFIX.SUPPLIER_DASHBOARD:
           this.authUser = await this.expertsService.verifyToken(token);
+
+          // Save connected into database
           await this.connectedExpertsService.save({
             session_id: this.sessionId,
             connected_id: socket.id,
             expert_id: this.authUser.id,
           });
+
+          // Get list rooms
           rooms = await this.roomChatsService.getListRoomChatByExpertId(
-              this.authUser.id,
+            this.authUser.id,
           );
+
+          // Join auth supplier room and auth supplier room by session id
+          console.log('Expert');
+          console.log([
+            this.supplierRoomPrefix(this.authUser.id),
+            this.supplierRoomPrefix(this.authUser.id, this.sessionId),
+          ]);
+
+          socket.join([
+            this.supplierRoomPrefix(this.authUser.id),
+            this.supplierRoomPrefix(this.authUser.id, this.sessionId),
+          ]);
 
           break;
         default:
@@ -133,68 +193,70 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async onLogout(socket: Socket) {
     switch (this.routePrefix) {
       case ROUTE_PREFIX.MEMBER_PAGE:
-        let connectedMembers = await this.connectedMembersService.findManyByConditions({
-          'session_id': this.sessionId,
-          'member_id' : this.authUser.id
-        });
+        console.log('Member');
+        console.log(this.memberRoomPrefix(this.authUser.id, this.sessionId));
 
-        if (connectedMembers) {
-          for (const connectedMember of connectedMembers) {
-            this.server.to(connectedMember.connected_id).emit('logout-and-clear-data');
-          }
-        }
+        this.server
+          .to(this.memberRoomPrefix(this.authUser.id, this.sessionId))
+          .emit('logout-and-clear-data');
         break;
 
       case ROUTE_PREFIX.SUPPLIER_DASHBOARD:
-        let connectedExperts = await this.connectedExpertsService.findManyByConditions({
-          'session_id': this.sessionId,
-          'member_id' : this.authUser.id
-        });
+        console.log('Expert');
+        console.log(this.supplierRoomPrefix(this.authUser.id, this.sessionId));
 
-        if (connectedExperts) {
-          for (const connectedExpert of connectedExperts) {
-            this.server.to(connectedExpert.connected_id).emit('logout-and-clear-data');
-          }
-        }
+        this.server
+          .to(this.supplierRoomPrefix(this.authUser.id, this.sessionId))
+          .emit('logout-and-clear-data');
         break;
+
       default:
         throw new BadRequestException('Route Prefix is invalid');
     }
   }
 
-
   @SubscribeMessage('created-room')
   async onCreatedRoom(socket: Socket, { id, member_id, expert_id }) {
     try {
-      let newRoom = await this.roomChatsService.findByConditions({ id }, ['member.connected_members', 'expert.connected_experts'])
-      if (!newRoom){
+      const newRoom = await this.roomChatsService.findByConditions({ id }, [
+        'member',
+        'expert',
+      ]);
+      if (!newRoom) {
         throw new BadRequestException('Room is not exist');
       }
 
-      // Emit to member
-      if (newRoom?.member?.connected_members){
-        let connectedMembers = newRoom.member.connected_members
-        let rooms = await this.roomChatsService.getListRoomChatByMemberId(
+      // Emit and join room to member
+      if (newRoom?.member) {
+        const memberRooms =
+          await this.roomChatsService.getListRoomChatByMemberId(
             newRoom.member_id,
-        );
-        for (const connectedMember of connectedMembers) {
-          this.server.to(connectedMember.connected_id).emit('load-rooms', rooms);
-        }
+          );
+
+        console.log('Member');
+        console.log(this.memberRoomPrefix(newRoom.member_id));
+
+        this.server
+          .to(this.memberRoomPrefix(newRoom.member_id))
+          .emit('load-rooms', memberRooms);
       }
 
       // Emit to expert
-      if (newRoom?.expert?.connected_experts){
-        let connectedExperts = newRoom.expert.connected_experts
-        let rooms = await this.roomChatsService.getListRoomChatByExpertId(
+      if (newRoom?.expert) {
+        const supplierRooms =
+          await this.roomChatsService.getListRoomChatByExpertId(
             newRoom.expert_id,
-        );
-        for (const connectedExpert of connectedExperts) {
-          this.server.to(connectedExpert.connected_id).emit('load-rooms', rooms);
-        }
-      }
+          );
 
+        console.log('Expert');
+        console.log(this.supplierRoomPrefix(newRoom.expert_id));
+
+        this.server
+          .to(this.supplierRoomPrefix(newRoom.expert_id))
+          .emit('load-rooms', supplierRooms);
+      }
     } catch (e) {
-      console.log(e)
+      console.log(e);
     }
   }
 }

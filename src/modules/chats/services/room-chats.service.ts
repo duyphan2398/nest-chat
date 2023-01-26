@@ -4,7 +4,6 @@ import { Repository } from 'typeorm';
 import { RoomChat } from '../entities/room-chat.entity';
 import { EXPERT_STATUS } from '../enums/experts.enum';
 import { MEMBER_STATUS } from '../enums/members.enum';
-import {Expert} from "../entities/expert.entity";
 
 @Injectable()
 export class RoomChatsService {
@@ -15,7 +14,7 @@ export class RoomChatsService {
   async findByConditions(condition: object, relations = []): Promise<RoomChat> {
     return await this.roomChatsRepo.findOne({
       where: condition,
-      relations
+      relations,
     });
   }
 
