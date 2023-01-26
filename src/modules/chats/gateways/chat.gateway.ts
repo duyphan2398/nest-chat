@@ -196,18 +196,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         console.log('Member');
         console.log(this.memberRoomPrefix(this.authUser.id, this.sessionId));
 
-        this.server
+        socket
           .to(this.memberRoomPrefix(this.authUser.id, this.sessionId))
-          .emit('logout-and-clear-data');
+          .emit('logout');
         break;
 
       case ROUTE_PREFIX.SUPPLIER_DASHBOARD:
         console.log('Expert');
         console.log(this.supplierRoomPrefix(this.authUser.id, this.sessionId));
 
-        this.server
+        socket
           .to(this.supplierRoomPrefix(this.authUser.id, this.sessionId))
-          .emit('logout-and-clear-data');
+          .emit('logout');
         break;
 
       default:
@@ -233,9 +233,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             newRoom.member_id,
           );
 
-        console.log('Member');
-        console.log(this.memberRoomPrefix(newRoom.member_id));
-
         this.server
           .to(this.memberRoomPrefix(newRoom.member_id))
           .emit('load-rooms', memberRooms);
@@ -247,9 +244,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           await this.roomChatsService.getListRoomChatByExpertId(
             newRoom.expert_id,
           );
-
-        console.log('Expert');
-        console.log(this.supplierRoomPrefix(newRoom.expert_id));
 
         this.server
           .to(this.supplierRoomPrefix(newRoom.expert_id))
