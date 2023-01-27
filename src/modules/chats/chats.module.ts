@@ -20,6 +20,9 @@ import { ConnectedExpertsService } from './services/connected-experts.service';
 import { ConnectedMembersService } from './services/connected-members.service';
 import { GatewayResponder } from '../../core/response/gateway.response';
 import { IsMemberExistConstraint } from './rules/exist-member.rule';
+import { RoomChatDetailsController } from './controllers/room-chat-details.controller';
+import { IsRoomChatExistConstraint } from './rules/exist-room-chat.rule';
+import { RoomChatDetailsService } from './services/room-chat-details.service';
 
 @Module({
   imports: [
@@ -33,8 +36,14 @@ import { IsMemberExistConstraint } from './rules/exist-member.rule';
       ConnectedExpert,
     ]),
   ],
-  controllers: [MembersController, ExpertsController, RoomChatsController],
+  controllers: [
+    MembersController,
+    ExpertsController,
+    RoomChatsController,
+    RoomChatDetailsController,
+  ],
   providers: [
+    IsRoomChatExistConstraint,
     IsExpertExistConstraint,
     IsMemberExistConstraint,
     ConnectedExpertsService,
@@ -42,6 +51,7 @@ import { IsMemberExistConstraint } from './rules/exist-member.rule';
     MembersService,
     ExpertsService,
     RoomChatsService,
+    RoomChatDetailsService,
     Responder,
     GatewayResponder,
     ChatGateway,

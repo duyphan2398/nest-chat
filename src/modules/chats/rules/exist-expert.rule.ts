@@ -16,7 +16,7 @@ export class IsExpertExistConstraint implements ValidatorConstraintInterface {
   constructor(private readonly expertsService: ExpertsService) {}
 
   validate(id: number) {
-    return this.expertsService.findById(id).then((expert) => {
+    return this.expertsService.findById(+id).then((expert) => {
       return isInstance(expert, Expert);
     });
   }

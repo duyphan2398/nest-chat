@@ -1,3 +1,4 @@
 {
-  "ROOM_CHAT": "Room Chat existed"
+  "ROOM_CHAT_EXISTED": "Room Chat is existed",
+  "ROOM_CHAT_NOT_FOUND_WITH_BY_MEMBER": "Room Chat is not exist"
 }

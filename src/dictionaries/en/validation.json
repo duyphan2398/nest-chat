@@ -4,5 +4,6 @@
 
 
   "IsExpertExist": "Expert is not exist",
-  "IsMemberExist": "Member is not exist"
+  "IsMemberExist": "Member is not exist",
+  "IsRoomChatExist": "Room Chat is not exist"
 }

@@ -6,7 +6,7 @@ import { RoomChatsService } from '../services/room-chats.service';
 import { ApiCreateRoomChatDto } from '../dto/api/api-create-room-chat.dto';
 import { I18nService } from 'nestjs-i18n';
 import { ExpertAuthGuard } from '../../../guards/expert-auth.guard';
-import {SupplierApiCreateRoomChatDto} from "../dto/supplier-api/supplier-api-create-room-chat.dto";
+import { SupplierApiCreateRoomChatDto } from '../dto/supplier-api/supplier-api-create-room-chat.dto';
 
 @Controller()
 export class RoomChatsController {
@@ -29,7 +29,7 @@ export class RoomChatsController {
 
     if (existRoomChat) {
       return this.responder.httpBadRequest(
-        this.i18n.t('room-chat-error-messages.ROOM_CHAT'),
+        this.i18n.t('room-chat-error-messages.ROOM_CHAT_EXISTED'),
       );
     }
 
@@ -54,7 +54,7 @@ export class RoomChatsController {
 
     if (existRoomChat) {
       return this.responder.httpBadRequest(
-        this.i18n.t('room-chat-error-messages.ROOM_CHAT'),
+        this.i18n.t('room-chat-error-messages.ROOM_CHAT_EXISTED'),
       );
     }
 

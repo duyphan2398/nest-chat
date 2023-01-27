@@ -18,6 +18,14 @@ export class RoomChatsService {
     });
   }
 
+  async findById(id): Promise<RoomChat> {
+    return await this.roomChatsRepo.findOne({
+      where: {
+        id,
+      },
+    });
+  }
+
   async getListRoomChatByMemberId(memberId): Promise<RoomChat[]> {
     return await this.roomChatsRepo
       .createQueryBuilder('room_chat')

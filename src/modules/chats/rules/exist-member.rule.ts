@@ -16,7 +16,7 @@ export class IsMemberExistConstraint implements ValidatorConstraintInterface {
   constructor(private readonly membersService: MembersService) {}
 
   validate(id: number) {
-    return this.membersService.findById(id).then((member) => {
+    return this.membersService.findById(+id).then((member) => {
       return isInstance(member, Member);
     });
   }

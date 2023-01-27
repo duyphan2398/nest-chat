@@ -174,49 +174,67 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async handleDisconnect(socket: Socket) {
-    switch (this.routePrefix) {
-      case ROUTE_PREFIX.MEMBER_PAGE:
-        // remove connection from DB
-        await this.connectedMembersService.deleteByConnectedId(socket.id);
-        break;
+    try {
+      switch (this.routePrefix) {
+        case ROUTE_PREFIX.MEMBER_PAGE:
+          // remove connection from DB
+          await this.connectedMembersService.deleteByConnectedId(socket.id);
+          break;
 
-      case ROUTE_PREFIX.SUPPLIER_DASHBOARD:
-        // remove connection from DB
-        await this.connectedExpertsService.deleteByConnectedId(socket.id);
-        break;
+        case ROUTE_PREFIX.SUPPLIER_DASHBOARD:
+          // remove connection from DB
+          await this.connectedExpertsService.deleteByConnectedId(socket.id);
+          break;
+      }
+
+      socket.disconnect();
+    } catch (exception) {
+      ChatGateway.handleEmitErrorNotice(
+        socket,
+        'handleDisconnect',
+        this.gatewayResponder.badRequest(exception.message),
+      );
     }
-
-    socket.disconnect();
   }
 
   @SubscribeMessage('logout')
   async onLogout(socket: Socket) {
-    switch (this.routePrefix) {
-      case ROUTE_PREFIX.MEMBER_PAGE:
-        console.log('Member');
-        console.log(this.memberRoomPrefix(this.authUser.id, this.sessionId));
+    try {
+      switch (this.routePrefix) {
+        case ROUTE_PREFIX.MEMBER_PAGE:
+          console.log('Member');
+          console.log(this.memberRoomPrefix(this.authUser.id, this.sessionId));
 
-        socket
-          .to(this.memberRoomPrefix(this.authUser.id, this.sessionId))
-          .emit('logout');
-        break;
+          socket
+            .to(this.memberRoomPrefix(this.authUser.id, this.sessionId))
+            .emit('logout');
+          break;
 
-      case ROUTE_PREFIX.SUPPLIER_DASHBOARD:
-        console.log('Expert');
-        console.log(this.supplierRoomPrefix(this.authUser.id, this.sessionId));
+        case ROUTE_PREFIX.SUPPLIER_DASHBOARD:
+          console.log('Expert');
+          console.log(
+            this.supplierRoomPrefix(this.authUser.id, this.sessionId),
+          );
 
-        socket
-          .to(this.supplierRoomPrefix(this.authUser.id, this.sessionId))
-          .emit('logout');
-        break;
+          socket
+            .to(this.supplierRoomPrefix(this.authUser.id, this.sessionId))
+            .emit('logout');
+          break;
 
-      default:
-        throw new BadRequestException('Route Prefix is invalid');
+        default:
+          throw new BadRequestException('Route Prefix is invalid');
+      }
+    } catch (exception) {
+      ChatGateway.handleEmitErrorNotice(
+        socket,
+        'logout',
+        this.gatewayResponder.badRequest(exception.message),
+      );
     }
   }
 
   @SubscribeMessage('created-room')
-  async onCreatedRoom(socket: Socket, { id, member_id, expert_id }) {
+  async onCreatedRoom(socket: Socket, { id }) {
     try {
       const newRoom = await this.roomChatsService.findByConditions({ id }, [
         'member',
@@ -249,8 +267,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           .to(this.supplierRoomPrefix(newRoom.expert_id))
           .emit('load-rooms', supplierRooms);
       }
-    } catch (e) {
-      console.log(e);
+    } catch (exception) {
+      ChatGateway.handleEmitErrorNotice(
+        socket,
+        'created-room',
+        this.gatewayResponder.badRequest(exception.message),
+      );
     }
   }
 }
