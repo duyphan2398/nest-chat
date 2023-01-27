@@ -5,8 +5,6 @@ import { Repository } from 'typeorm';
 import { EXPERT_STATUS, TOKEN_EXPIRED_TIME } from '../enums/experts.enum';
 import * as moment from 'moment/moment';
 import { I18nService } from 'nestjs-i18n';
-import {Member} from "../entities/member.entity";
-import {MEMBER_IS_VERIFY, MEMBER_STATUS} from "../enums/members.enum";
 
 @Injectable()
 export class ExpertsService {
@@ -24,7 +22,7 @@ export class ExpertsService {
   async findById(id): Promise<Expert> {
     return await this.expertsRepo.findOne({
       where: {
-        id,
+        id: id,
         status: EXPERT_STATUS.ENABLE,
       },
     });

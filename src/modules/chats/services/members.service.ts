@@ -9,7 +9,6 @@ import {
 } from '../enums/members.enum';
 import * as moment from 'moment/moment';
 import { I18nService } from 'nestjs-i18n';
-import {RoomChat} from "../entities/room-chat.entity";
 
 @Injectable()
 export class MembersService {
@@ -27,7 +26,7 @@ export class MembersService {
   async findById(id): Promise<Member> {
     return await this.membersRepo.findOne({
       where: {
-        id,
+        id: id,
         status: MEMBER_STATUS.ENABLE,
         is_verify: MEMBER_IS_VERIFY.VERIFY,
       },

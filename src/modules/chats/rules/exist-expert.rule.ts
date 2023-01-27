@@ -15,10 +15,13 @@ import { Expert } from '../entities/expert.entity';
 export class IsExpertExistConstraint implements ValidatorConstraintInterface {
   constructor(private readonly expertsService: ExpertsService) {}
 
-  validate(id: number) {
-    return this.expertsService.findById(+id).then((expert) => {
-      return isInstance(expert, Expert);
-    });
+  validate(id) {
+    return (
+      id &&
+      this.expertsService.findById(id).then((expert) => {
+        return isInstance(expert, Expert);
+      })
+    );
   }
 
   defaultMessage(args: ValidationArguments) {

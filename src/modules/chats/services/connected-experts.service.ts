@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { I18nService } from 'nestjs-i18n';
 import { ConnectedExpert } from '../entities/connected-expert.entity';
-import {ConnectedMember} from "../entities/connected-member.entity";
 
 @Injectable()
 export class ConnectedExpertsService {

@@ -21,7 +21,7 @@ export class RoomChatsService {
   async findById(id): Promise<RoomChat> {
     return await this.roomChatsRepo.findOne({
       where: {
-        id,
+        id: id,
       },
     });
   }

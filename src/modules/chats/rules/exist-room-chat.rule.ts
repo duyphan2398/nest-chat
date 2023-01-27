@@ -15,10 +15,13 @@ import { RoomChat } from '../entities/room-chat.entity';
 export class IsRoomChatExistConstraint implements ValidatorConstraintInterface {
   constructor(private readonly roomChatsService: RoomChatsService) {}
 
-  validate(id: number) {
-    return this.roomChatsService.findById(+id).then((roomChat) => {
-      return isInstance(roomChat, RoomChat);
-    });
+  validate(id) {
+    return (
+      id &&
+      this.roomChatsService.findById(id).then((roomChat) => {
+        return isInstance(roomChat, RoomChat);
+      })
+    );
   }
 
   defaultMessage(args: ValidationArguments) {

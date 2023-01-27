@@ -15,10 +15,13 @@ import { Member } from '../entities/member.entity';
 export class IsMemberExistConstraint implements ValidatorConstraintInterface {
   constructor(private readonly membersService: MembersService) {}
 
-  validate(id: number) {
-    return this.membersService.findById(+id).then((member) => {
-      return isInstance(member, Member);
-    });
+  validate(id) {
+    return (
+      id &&
+      this.membersService.findById(id).then((member) => {
+        return isInstance(member, Member);
+      })
+    );
   }
 
   defaultMessage(args: ValidationArguments) {
