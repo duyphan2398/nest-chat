@@ -268,7 +268,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         content,
         expert_id,
         member_id,
-        chat_time: moment().format('YYYY-MM-DD HH:mm:ss').toString(),
+        chat_time: moment(),
         sender_type:
           this.routePrefix === ROUTE_PREFIX.MEMBER_PAGE ? 'Member' : 'Expert',
       };
