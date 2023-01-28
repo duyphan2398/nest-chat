@@ -14,6 +14,7 @@ import { ROUTE_PREFIX } from '../enums/chats.enum';
 import { ExpertsService } from '../services/experts.service';
 import { ConnectedExpertsService } from '../services/connected-experts.service';
 import { GatewayResponder } from '../../../core/response/gateway.response';
+import * as moment from 'moment';
 
 @WebSocketGateway({
   namespace: 'chat',
@@ -116,12 +117,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           );
 
           // Join auth member room and auth member room by session id
-          console.log('Member');
-          console.log([
-            this.memberRoomPrefix(this.authUser.id),
-            this.memberRoomPrefix(this.authUser.id, this.sessionId),
-          ]);
-
           socket.join([
             this.memberRoomPrefix(this.authUser.id),
             this.memberRoomPrefix(this.authUser.id, this.sessionId),
@@ -145,12 +140,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           );
 
           // Join auth supplier room and auth supplier room by session id
-          console.log('Expert');
-          console.log([
-            this.supplierRoomPrefix(this.authUser.id),
-            this.supplierRoomPrefix(this.authUser.id, this.sessionId),
-          ]);
-
           socket.join([
             this.supplierRoomPrefix(this.authUser.id),
             this.supplierRoomPrefix(this.authUser.id, this.sessionId),
@@ -161,7 +150,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           throw new BadRequestException('Route Prefix is invalid');
       }
 
-      socket.emit('load-rooms', rooms);
+      socket.emit('load-rooms', this.gatewayResponder.ok(rooms));
     } catch (exception) {
       ChatGateway.handleEmitErrorNotice(
         socket,
@@ -202,20 +191,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     try {
       switch (this.routePrefix) {
         case ROUTE_PREFIX.MEMBER_PAGE:
-          console.log('Member');
-          console.log(this.memberRoomPrefix(this.authUser.id, this.sessionId));
-
           socket
             .to(this.memberRoomPrefix(this.authUser.id, this.sessionId))
             .emit('logout');
           break;
 
         case ROUTE_PREFIX.SUPPLIER_DASHBOARD:
-          console.log('Expert');
-          console.log(
-            this.supplierRoomPrefix(this.authUser.id, this.sessionId),
-          );
-
           socket
             .to(this.supplierRoomPrefix(this.authUser.id, this.sessionId))
             .emit('logout');
@@ -253,7 +234,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
         this.server
           .to(this.memberRoomPrefix(newRoom.member_id))
-          .emit('load-rooms', memberRooms);
+          .emit('load-rooms', this.gatewayResponder.ok(memberRooms));
       }
 
       // Emit to expert
@@ -265,12 +246,44 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
         this.server
           .to(this.supplierRoomPrefix(newRoom.expert_id))
-          .emit('load-rooms', supplierRooms);
+          .emit('load-rooms', this.gatewayResponder.ok(supplierRooms));
       }
     } catch (exception) {
       ChatGateway.handleEmitErrorNotice(
         socket,
         'created-room',
+        this.gatewayResponder.badRequest(exception.message),
+      );
+    }
+  }
+
+  @SubscribeMessage('send-chat-message')
+  async onSendChatMessage(
+    socket: Socket,
+    { room_chat_id, content, expert_id, member_id },
+  ) {
+    try {
+      const chatMessageData = {
+        room_chat_id,
+        content,
+        expert_id,
+        member_id,
+        chat_time: moment().format('YYYY-MM-DD HH:mm:ss').toString(),
+        sender_type:
+          this.routePrefix === ROUTE_PREFIX.MEMBER_PAGE ? 'Member' : 'Expert',
+      };
+
+      this.server
+        .to(this.supplierRoomPrefix(expert_id))
+        .emit('new-chat-message', this.gatewayResponder.ok(chatMessageData));
+
+      this.server
+        .to(this.memberRoomPrefix(member_id))
+        .emit('new-chat-message', this.gatewayResponder.ok(chatMessageData));
+    } catch (exception) {
+      ChatGateway.handleEmitErrorNotice(
+        socket,
+        'send-chat-message',
         this.gatewayResponder.badRequest(exception.message),
       );
     }

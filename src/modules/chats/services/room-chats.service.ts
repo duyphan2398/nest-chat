@@ -30,6 +30,7 @@ export class RoomChatsService {
     return await this.roomChatsRepo
       .createQueryBuilder('room_chat')
       .leftJoinAndSelect('room_chat.expert', 'expert')
+      .leftJoinAndSelect('room_chat.member', 'member')
       .where('room_chat.member_id = :member_id', { member_id: memberId })
       .andWhere('expert.status = :expert_status', {
         expert_status: EXPERT_STATUS.ENABLE,
@@ -42,6 +43,7 @@ export class RoomChatsService {
     return await this.roomChatsRepo
       .createQueryBuilder('room_chat')
       .leftJoinAndSelect('room_chat.member', 'member')
+      .leftJoinAndSelect('room_chat.expert', 'expert')
       .where('room_chat.expert_id = :expert_id', { expert_id: expertId })
       .andWhere('member.status = :member_status', {
         member_status: MEMBER_STATUS.ENABLE,

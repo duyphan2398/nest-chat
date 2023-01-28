@@ -15,9 +15,6 @@ export class RoomChatDetailsService {
       .createQueryBuilder('room_chat_detail')
       .where('room_chat_detail.room_chat_id = :room_id', { room_id: roomId })
       .orderBy('room_chat_detail.created', 'ASC')
-      .leftJoinAndSelect('room_chat_detail.room_chat', 'room_chat')
-      .leftJoinAndSelect('room_chat.expert', 'expert')
-      .leftJoinAndSelect('room_chat.member', 'member')
       .getMany();
   }
 }

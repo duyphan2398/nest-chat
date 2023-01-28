@@ -6,6 +6,25 @@ export class GatewayResponder {
   constructor(@Inject(I18nService) private i18n: I18nService) {}
 
   /**
+   * Response: ok 200
+   *
+   * @param data
+   * @param message
+   * @param code
+   */
+  ok(
+    data: object | object[] | null,
+    message = this.i18n.t('gateway-messages.OK'),
+    code: number = HttpStatus.OK,
+  ) {
+    return {
+      code,
+      message,
+      data,
+    };
+  }
+
+  /**
    * Response: not found 404
    *
    * @param message
