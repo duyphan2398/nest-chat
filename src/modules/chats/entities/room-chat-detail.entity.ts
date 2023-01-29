@@ -36,7 +36,14 @@ export class RoomChatDetail extends BaseEntity {
   @Column()
   receiver_status: number;
 
-  @Column()
+  @Column({
+    transformer: {
+      to: (value) => {
+        return new Date(value);
+      },
+      from: (value) => value,
+    },
+  })
   chat_time: string;
 
   @Column()

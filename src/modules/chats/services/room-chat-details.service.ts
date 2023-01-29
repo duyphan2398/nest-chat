@@ -17,4 +17,9 @@ export class RoomChatDetailsService {
       .orderBy('room_chat_detail.created', 'ASC')
       .getMany();
   }
+
+  async save(data: object): Promise<RoomChatDetail> {
+    const roomChatDetail = this.roomChatDetailRepo.create(data);
+    return await this.roomChatDetailRepo.save(roomChatDetail);
+  }
 }

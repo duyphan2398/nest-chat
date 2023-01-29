@@ -15,6 +15,7 @@ import { ExpertsService } from '../services/experts.service';
 import { ConnectedExpertsService } from '../services/connected-experts.service';
 import { GatewayResponder } from '../../../core/response/gateway.response';
 import * as moment from 'moment';
+import { RoomChatDetailsService } from '../services/room-chat-details.service';
 
 @WebSocketGateway({
   namespace: 'chat',
@@ -25,12 +26,9 @@ import * as moment from 'moment';
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
-  private routePrefix;
-  private sessionId;
-  private authUser;
-  private memberRoomPrefix = (id, sessionId = '') =>
+  private memberRoomPrefix = (id, sessionId: any = '') =>
     `member-${id}-${sessionId}`;
-  private supplierRoomPrefix = (id, sessionId = '') =>
+  private supplierRoomPrefix = (id, sessionId: any = '') =>
     `supplier-${id}-${sessionId}`;
 
   constructor(
@@ -42,6 +40,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly connectedExpertsService: ConnectedExpertsService,
     @Inject(RoomChatsService)
     private readonly roomChatsService: RoomChatsService,
+    @Inject(RoomChatDetailsService)
+    private readonly roomChatDetailService: RoomChatDetailsService,
     @Inject(GatewayResponder)
     private readonly gatewayResponder: GatewayResponder,
   ) {}
@@ -91,58 +91,59 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
    */
   async handleConnection(socket: Socket) {
     const token = socket.handshake.headers.authorization || '';
-    this.routePrefix = socket.handshake.query.route_prefix;
-    this.sessionId = socket.handshake.query.session_id;
+    const routePrefix = socket.handshake.query.route_prefix;
+    const sessionId = socket.handshake.query.session_id;
     let rooms = [];
+    let authUser = null;
 
     try {
-      if (!token || !this.routePrefix || !this.sessionId) {
+      if (!token || !routePrefix || !sessionId) {
         throw new BadRequestException('Please Fill Full Fields');
       }
 
-      switch (this.routePrefix) {
+      switch (routePrefix) {
         case ROUTE_PREFIX.MEMBER_PAGE:
-          this.authUser = await this.membersService.verifyToken(token);
+          authUser = await this.membersService.verifyToken(token);
 
           // Save connected into database
           await this.connectedMembersService.save({
-            session_id: this.sessionId,
+            session_id: sessionId,
             connected_id: socket.id,
-            member_id: this.authUser.id,
+            member_id: authUser.id,
           });
 
           // Get list rooms
           rooms = await this.roomChatsService.getListRoomChatByMemberId(
-            this.authUser.id,
+            authUser.id,
           );
 
           // Join auth member room and auth member room by session id
           socket.join([
-            this.memberRoomPrefix(this.authUser.id),
-            this.memberRoomPrefix(this.authUser.id, this.sessionId),
+            this.memberRoomPrefix(authUser.id),
+            this.memberRoomPrefix(authUser.id, sessionId),
           ]);
 
           break;
 
         case ROUTE_PREFIX.SUPPLIER_DASHBOARD:
-          this.authUser = await this.expertsService.verifyToken(token);
+          authUser = await this.expertsService.verifyToken(token);
 
           // Save connected into database
           await this.connectedExpertsService.save({
-            session_id: this.sessionId,
+            session_id: sessionId,
             connected_id: socket.id,
-            expert_id: this.authUser.id,
+            expert_id: authUser.id,
           });
 
           // Get list rooms
           rooms = await this.roomChatsService.getListRoomChatByExpertId(
-            this.authUser.id,
+            authUser.id,
           );
 
           // Join auth supplier room and auth supplier room by session id
           socket.join([
-            this.supplierRoomPrefix(this.authUser.id),
-            this.supplierRoomPrefix(this.authUser.id, this.sessionId),
+            this.supplierRoomPrefix(authUser.id),
+            this.supplierRoomPrefix(authUser.id, sessionId),
           ]);
 
           break;
@@ -150,6 +151,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           throw new BadRequestException('Route Prefix is invalid');
       }
 
+      socket.handshake.auth = authUser;
       socket.emit('load-rooms', this.gatewayResponder.ok(rooms));
     } catch (exception) {
       ChatGateway.handleEmitErrorNotice(
@@ -163,8 +165,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async handleDisconnect(socket: Socket) {
+    const routePrefix = socket.handshake.query.route_prefix;
+
     try {
-      switch (this.routePrefix) {
+      switch (routePrefix) {
         case ROUTE_PREFIX.MEMBER_PAGE:
           // remove connection from DB
           await this.connectedMembersService.deleteByConnectedId(socket.id);
@@ -188,18 +192,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('logout')
   async onLogout(socket: Socket) {
+    const routePrefix = socket.handshake.query.route_prefix;
+    const sessionId = socket.handshake.query.session_id;
+    const auth = socket.handshake.auth;
+
     try {
-      switch (this.routePrefix) {
+      switch (routePrefix) {
         case ROUTE_PREFIX.MEMBER_PAGE:
-          socket
-            .to(this.memberRoomPrefix(this.authUser.id, this.sessionId))
-            .emit('logout');
+          socket.to(this.memberRoomPrefix(auth.id, sessionId)).emit('logout');
           break;
 
         case ROUTE_PREFIX.SUPPLIER_DASHBOARD:
-          socket
-            .to(this.supplierRoomPrefix(this.authUser.id, this.sessionId))
-            .emit('logout');
+          socket.to(this.supplierRoomPrefix(auth.id, sessionId)).emit('logout');
           break;
 
         default:
@@ -262,17 +266,46 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     socket: Socket,
     { room_chat_id, content, expert_id, member_id },
   ) {
-    try {
-      const chatMessageData = {
-        room_chat_id,
-        content,
-        expert_id,
-        member_id,
-        chat_time: moment(),
-        sender_type:
-          this.routePrefix === ROUTE_PREFIX.MEMBER_PAGE ? 'Member' : 'Expert',
-      };
+    let chatMessageData = {};
+    const routePrefix = socket.handshake.query.route_prefix;
+    const auth = socket.handshake.auth;
 
+    try {
+      switch (routePrefix) {
+        case ROUTE_PREFIX.MEMBER_PAGE:
+          chatMessageData = {
+            room_chat_id,
+            content,
+            sender_id: auth.id,
+            sender_status: 1,
+            sender_type: 'Member',
+            receiver_id: expert_id,
+            receiver_status: 1,
+            receiver_type: 'Expert',
+            chat_time: moment(),
+            type: 1,
+          };
+
+          break;
+        case ROUTE_PREFIX.SUPPLIER_DASHBOARD:
+          chatMessageData = {
+            room_chat_id,
+            content,
+            sender_id: auth.id,
+            sender_status: 1,
+            sender_type: 'Expert',
+            receiver_id: member_id,
+            receiver_status: 1,
+            receiver_type: 'Member',
+            chat_time: moment(),
+            type: 1,
+          };
+          break;
+        default:
+          throw new BadRequestException('Route Prefix is invalid');
+      }
+
+      // Emit to client
       this.server
         .to(this.supplierRoomPrefix(expert_id))
         .emit('new-chat-message', this.gatewayResponder.ok(chatMessageData));
@@ -280,10 +313,51 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.server
         .to(this.memberRoomPrefix(member_id))
         .emit('new-chat-message', this.gatewayResponder.ok(chatMessageData));
+
+      await this.roomChatDetailService.save(chatMessageData);
     } catch (exception) {
       ChatGateway.handleEmitErrorNotice(
         socket,
         'send-chat-message',
+        this.gatewayResponder.badRequest(exception.message),
+      );
+    }
+  }
+
+  @SubscribeMessage('typing-chat-message')
+  async onTypingChatMessage(
+    socket: Socket,
+    { room_chat_id, expert_id, member_id },
+  ) {
+    try {
+      const routePrefix = socket.handshake.query.route_prefix;
+
+      switch (routePrefix) {
+        case ROUTE_PREFIX.MEMBER_PAGE:
+          // Emit to supplier
+          this.server
+            .to(this.supplierRoomPrefix(expert_id))
+            .emit(
+              'typing-chat-message',
+              this.gatewayResponder.ok({ room_chat_id }),
+            );
+          break;
+        case ROUTE_PREFIX.SUPPLIER_DASHBOARD:
+          // Emit to member
+          this.server
+            .to(this.memberRoomPrefix(member_id))
+            .emit(
+              'typing-chat-message',
+              this.gatewayResponder.ok({ room_chat_id }),
+            );
+          break;
+        default:
+          throw new BadRequestException('Route Prefix is invalid');
+      }
+    } catch (exception) {
+      ChatGateway.handleEmitErrorNotice(
+        socket,
+        'typing-chat-message',
         this.gatewayResponder.badRequest(exception.message),
       );
     }
