@@ -22,6 +22,7 @@ import {
   ROOM_CHAT_DETAIL_TYPE,
   SENDER_STATUS,
 } from '../enums/room-chat-details.enum';
+import { PARTNER_STATE } from '../enums/room-chats.enum';
 
 @WebSocketGateway({
   namespace: 'chat',
@@ -32,6 +33,7 @@ import {
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
+  private onlineClient = [];
   private memberRoomPrefix = (id, sessionId: any = '') =>
     `member-${id}-${sessionId}`;
   private supplierRoomPrefix = (id, sessionId: any = '') =>
@@ -99,7 +101,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const token = socket.handshake.headers.authorization || '';
     const routePrefix = socket.handshake.query.route_prefix;
     const sessionId = socket.handshake.query.session_id;
-    let rooms = [];
+    let roomChats = [];
     let authUser = null;
 
     try {
@@ -119,7 +121,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           });
 
           // Get list rooms
-          rooms = await this.roomChatsService.getListRoomChatByMemberId(
+          roomChats = await this.roomChatsService.getListRoomChatByMemberId(
             authUser.id,
           );
 
@@ -128,6 +130,34 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             this.memberRoomPrefix(authUser.id),
             this.memberRoomPrefix(authUser.id, sessionId),
           ]);
+
+          // Emit online event to partner and Get state of partner
+          roomChats.forEach((roomChat) => {
+            socket.to(this.supplierRoomPrefix(roomChat.expert_id)).emit(
+              'online',
+              this.gatewayResponder.ok({
+                room_chat_id: roomChat.id,
+                member_id: authUser.id,
+              }),
+            );
+
+            if (
+              this.onlineClient[this.supplierRoomPrefix(roomChat.expert_id)]
+            ) {
+              roomChat.partner_state = PARTNER_STATE.ONLINE;
+            } else {
+              roomChat.partner_state = PARTNER_STATE.OFFLINE;
+            }
+          });
+
+          // Log into online list
+          if (this.onlineClient[this.memberRoomPrefix(authUser.id)]) {
+            this.onlineClient[this.memberRoomPrefix(authUser.id)].push(
+              socket.id,
+            );
+          } else {
+            this.onlineClient[this.memberRoomPrefix(authUser.id)] = [socket.id];
+          }
 
           break;
 
@@ -142,7 +172,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           });
 
           // Get list rooms
-          rooms = await this.roomChatsService.getListRoomChatByExpertId(
+          roomChats = await this.roomChatsService.getListRoomChatByExpertId(
             authUser.id,
           );
 
@@ -152,13 +182,41 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             this.supplierRoomPrefix(authUser.id, sessionId),
           ]);
 
+          // Emit online event to partner and Get state of partner
+          roomChats.forEach((roomChat) => {
+            socket.to(this.memberRoomPrefix(roomChat.member_id)).emit(
+              'online',
+              this.gatewayResponder.ok({
+                room_chat_id: roomChat.id,
+                expert_id: authUser.id,
+              }),
+            );
+
+            if (this.onlineClient[this.memberRoomPrefix(roomChat.member_id)]) {
+              roomChat.partner_state = PARTNER_STATE.ONLINE;
+            } else {
+              roomChat.partner_state = PARTNER_STATE.OFFLINE;
+            }
+          });
+
+          // Log into online list
+          if (this.onlineClient[this.supplierRoomPrefix(authUser.id)]) {
+            this.onlineClient[this.supplierRoomPrefix(authUser.id)].push(
+              socket.id,
+            );
+          } else {
+            this.onlineClient[this.supplierRoomPrefix(authUser.id)] = [
+              socket.id,
+            ];
+          }
+
           break;
         default:
           throw new BadRequestException('Route Prefix is invalid');
       }
 
       socket.handshake.auth = authUser;
-      socket.emit('load-rooms', this.gatewayResponder.ok(rooms));
+      socket.emit('load-rooms', this.gatewayResponder.ok(roomChats));
     } catch (exception) {
       ChatGateway.handleEmitErrorNotice(
         socket,
