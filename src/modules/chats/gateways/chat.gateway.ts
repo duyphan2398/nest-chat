@@ -33,7 +33,7 @@ import { PARTNER_STATE } from '../enums/room-chats.enum';
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
-  private onlineClient = [];
+  private onlineClients = [];
   private memberRoomPrefix = (id, sessionId: any = '') =>
     `member-${id}-${sessionId}`;
   private supplierRoomPrefix = (id, sessionId: any = '') =>
@@ -142,7 +142,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             );
 
             if (
-              this.onlineClient[this.supplierRoomPrefix(roomChat.expert_id)]
+              this.onlineClients[this.supplierRoomPrefix(roomChat.expert_id)]
+                ?.length
             ) {
               roomChat.partner_state = PARTNER_STATE.ONLINE;
             } else {
@@ -151,12 +152,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           });
 
           // Log into online list
-          if (this.onlineClient[this.memberRoomPrefix(authUser.id)]) {
-            this.onlineClient[this.memberRoomPrefix(authUser.id)].push(
+          if (this.onlineClients[this.memberRoomPrefix(authUser.id)]?.length) {
+            this.onlineClients[this.memberRoomPrefix(authUser.id)].push(
               socket.id,
             );
           } else {
-            this.onlineClient[this.memberRoomPrefix(authUser.id)] = [socket.id];
+            this.onlineClients[this.memberRoomPrefix(authUser.id)] = [
+              socket.id,
+            ];
           }
 
           break;
@@ -192,7 +195,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
               }),
             );
 
-            if (this.onlineClient[this.memberRoomPrefix(roomChat.member_id)]) {
+            if (
+              this.onlineClients[this.memberRoomPrefix(roomChat.member_id)]
+                ?.length
+            ) {
               roomChat.partner_state = PARTNER_STATE.ONLINE;
             } else {
               roomChat.partner_state = PARTNER_STATE.OFFLINE;
@@ -200,12 +206,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           });
 
           // Log into online list
-          if (this.onlineClient[this.supplierRoomPrefix(authUser.id)]) {
-            this.onlineClient[this.supplierRoomPrefix(authUser.id)].push(
+          if (
+            this.onlineClients[this.supplierRoomPrefix(authUser.id)]?.length
+          ) {
+            this.onlineClients[this.supplierRoomPrefix(authUser.id)].push(
               socket.id,
             );
           } else {
-            this.onlineClient[this.supplierRoomPrefix(authUser.id)] = [
+            this.onlineClients[this.supplierRoomPrefix(authUser.id)] = [
               socket.id,
             ];
           }
@@ -229,20 +237,79 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async handleDisconnect(socket: Socket) {
+    console.log('Before:');
+    console.log(this.onlineClients);
     const routePrefix = socket.handshake.query.route_prefix;
+    const auth = socket.handshake.auth;
 
     try {
       switch (routePrefix) {
         case ROUTE_PREFIX.MEMBER_PAGE:
+          // Remove in onlineClients
+          const listSocketOfThisMember =
+            this.onlineClients[this.memberRoomPrefix(auth.id)];
+
+          this.onlineClients[this.memberRoomPrefix(auth.id)] =
+            listSocketOfThisMember.filter((socketId) => socketId !== socket.id);
+
+          // Check this member offline and emit offline event
+          if (!this.onlineClients[this.memberRoomPrefix(auth.id)]?.length) {
+            // Get list rooms
+            const roomChats =
+              await this.roomChatsService.getListRoomChatByMemberId(auth.id);
+
+            // Emit to expert
+            roomChats.forEach((roomChat) => {
+              socket.to(this.supplierRoomPrefix(roomChat.expert_id)).emit(
+                'offline',
+                this.gatewayResponder.ok({
+                  room_chat_id: roomChat.id,
+                  member_id: auth.id,
+                }),
+              );
+            });
+          }
+
           // remove connection from DB
           await this.connectedMembersService.deleteByConnectedId(socket.id);
           break;
 
         case ROUTE_PREFIX.SUPPLIER_DASHBOARD:
+          // Remove in onlineClients
+          const listSocketOfThisExpert =
+            this.onlineClients[this.supplierRoomPrefix(auth.id)];
+
+          this.onlineClients[this.supplierRoomPrefix(auth.id)] =
+            listSocketOfThisExpert.filter((socketId) => socketId !== socket.id);
+
+          // Check this member offline and emit offline event
+          if (!this.onlineClients[this.supplierRoomPrefix(auth.id)]?.length) {
+            console.log('In if');
+            // Get list rooms
+            const roomChats =
+              await this.roomChatsService.getListRoomChatByExpertId(auth.id);
+
+            // Emit to expert
+            console.log(roomChats);
+            roomChats.forEach((roomChat) => {
+              socket.to(this.memberRoomPrefix(roomChat.member_id)).emit(
+                'offline',
+                this.gatewayResponder.ok({
+                  room_chat_id: roomChat.id,
+                  expert_id: auth.id,
+                }),
+              );
+            });
+          }
+
           // remove connection from DB
           await this.connectedExpertsService.deleteByConnectedId(socket.id);
+
           break;
       }
+
+      console.log('After:');
+      console.log(this.onlineClients);
 
       socket.disconnect();
     } catch (exception) {
