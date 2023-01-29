@@ -232,13 +232,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         this.gatewayResponder.unauthenticated(exception.message),
       );
 
-      await this.handleDisconnect(socket);
+      socket.disconnect();
     }
   }
 
   async handleDisconnect(socket: Socket) {
-    console.log('Before:');
-    console.log(this.onlineClients);
     const routePrefix = socket.handshake.query.route_prefix;
     const auth = socket.handshake.auth;
 
@@ -284,13 +282,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
           // Check this member offline and emit offline event
           if (!this.onlineClients[this.supplierRoomPrefix(auth.id)]?.length) {
-            console.log('In if');
             // Get list rooms
             const roomChats =
               await this.roomChatsService.getListRoomChatByExpertId(auth.id);
 
             // Emit to expert
-            console.log(roomChats);
             roomChats.forEach((roomChat) => {
               socket.to(this.memberRoomPrefix(roomChat.member_id)).emit(
                 'offline',
@@ -304,12 +300,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
           // remove connection from DB
           await this.connectedExpertsService.deleteByConnectedId(socket.id);
-
           break;
       }
-
-      console.log('After:');
-      console.log(this.onlineClients);
 
       socket.disconnect();
     } catch (exception) {
@@ -340,6 +332,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         default:
           throw new BadRequestException('Route Prefix is invalid');
       }
+
+      socket.disconnect();
     } catch (exception) {
       ChatGateway.handleEmitErrorNotice(
         socket,
