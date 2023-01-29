@@ -22,4 +22,8 @@ export class RoomChatDetailsService {
     const roomChatDetail = this.roomChatDetailRepo.create(data);
     return await this.roomChatDetailRepo.save(roomChatDetail);
   }
+
+  async update(condition, data) {
+    return await this.roomChatDetailRepo.update(condition, data);
+  }
 }

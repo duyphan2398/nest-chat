@@ -16,6 +16,12 @@ import { ConnectedExpertsService } from '../services/connected-experts.service';
 import { GatewayResponder } from '../../../core/response/gateway.response';
 import * as moment from 'moment';
 import { RoomChatDetailsService } from '../services/room-chat-details.service';
+import {
+  RECEIVER_STATUS,
+  RECEIVER_TYPE,
+  ROOM_CHAT_DETAIL_TYPE,
+  SENDER_STATUS,
+} from '../enums/room-chat-details.enum';
 
 @WebSocketGateway({
   namespace: 'chat',
@@ -277,13 +283,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             room_chat_id,
             content,
             sender_id: auth.id,
-            sender_status: 1,
+            sender_status: SENDER_STATUS.SEEN,
             sender_type: 'Member',
             receiver_id: expert_id,
-            receiver_status: 1,
+            receiver_status: RECEIVER_STATUS.NOT_SEEN,
             receiver_type: 'Expert',
             chat_time: moment(),
-            type: 1,
+            type: ROOM_CHAT_DETAIL_TYPE.TEXT,
           };
 
           break;
@@ -292,13 +298,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             room_chat_id,
             content,
             sender_id: auth.id,
-            sender_status: 1,
+            sender_status: SENDER_STATUS.SEEN,
             sender_type: 'Expert',
             receiver_id: member_id,
-            receiver_status: 1,
+            receiver_status: RECEIVER_STATUS.NOT_SEEN,
             receiver_type: 'Member',
             chat_time: moment(),
-            type: 1,
+            type: ROOM_CHAT_DETAIL_TYPE.TEXT,
           };
           break;
         default:
@@ -314,6 +320,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         .to(this.memberRoomPrefix(member_id))
         .emit('new-chat-message', this.gatewayResponder.ok(chatMessageData));
 
+      // Save into database
       await this.roomChatDetailService.save(chatMessageData);
     } catch (exception) {
       ChatGateway.handleEmitErrorNotice(
@@ -358,6 +365,67 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       ChatGateway.handleEmitErrorNotice(
         socket,
         'typing-chat-message',
+        this.gatewayResponder.badRequest(exception.message),
+      );
+    }
+  }
+
+  @SubscribeMessage('seen-room')
+  async onSeenRoom(socket: Socket, { room_chat_id }) {
+    try {
+      const routePrefix = socket.handshake.query.route_prefix;
+      const auth = socket.handshake.auth;
+
+      switch (routePrefix) {
+        case ROUTE_PREFIX.MEMBER_PAGE:
+          // Emit to member
+          this.server
+            .to(this.memberRoomPrefix(auth.id))
+            .emit('seen-room', this.gatewayResponder.ok({ room_chat_id }));
+
+          // Update seen room chat details
+          await this.roomChatDetailService.update(
+            {
+              room_chat_id,
+              receiver_id: auth.id,
+              receiver_type: RECEIVER_TYPE.MEMBER,
+              receiver_status: SENDER_STATUS.NOT_SEEN,
+            },
+            {
+              receiver_status: SENDER_STATUS.SEEN,
+            },
+          );
+
+          break;
+
+        case ROUTE_PREFIX.SUPPLIER_DASHBOARD:
+          // Emit to expert
+          this.server
+            .to(this.supplierRoomPrefix(auth.id))
+            .emit('seen-room', this.gatewayResponder.ok({ room_chat_id }));
+
+          // Update seen room chat details
+          await this.roomChatDetailService.update(
+            {
+              room_chat_id,
+              receiver_id: auth.id,
+              receiver_type: RECEIVER_TYPE.EXPERT,
+              receiver_status: SENDER_STATUS.NOT_SEEN,
+            },
+            {
+              receiver_status: SENDER_STATUS.SEEN,
+            },
+          );
+
+          break;
+
+        default:
+          throw new BadRequestException('Route Prefix is invalid');
+      }
+    } catch (exception) {
+      ChatGateway.handleEmitErrorNotice(
+        socket,
+        'seen-room',
         this.gatewayResponder.badRequest(exception.message),
       );
     }
