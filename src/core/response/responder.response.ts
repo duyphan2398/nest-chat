@@ -13,9 +13,9 @@ export class Responder {
    * @param code
    */
   httpOK(
-      data: object | object[] | null,
-      message = this.i18n.t('http-messages.OK'),
-      code: number = HttpStatus.OK,
+    data: object | object[] | null,
+    message = this.i18n.t('http-messages.OK'),
+    code: number = HttpStatus.OK,
   ) {
     return {
       code,
@@ -33,9 +33,9 @@ export class Responder {
    * @param code
    */
   httpCreated(
-      data: object | object[] | null,
-      message: string = this.i18n.t('http-messages.CREATED'),
-      code: number = HttpStatus.CREATED,
+    data: object | object[] | null,
+    message: string = this.i18n.t('http-messages.CREATED'),
+    code: number = HttpStatus.CREATED,
   ) {
     return {
       code,
@@ -52,8 +52,8 @@ export class Responder {
    * @param code
    */
   httpNoContent(
-      message: string = this.i18n.t('http-messages.NO_CONTENT'),
-      code: number = HttpStatus.NO_CONTENT,
+    message: string = this.i18n.t('http-messages.NO_CONTENT'),
+    code: number = HttpStatus.NO_CONTENT,
   ) {
     return {
       code: 204,
@@ -69,8 +69,8 @@ export class Responder {
    * @param code
    */
   httpNotFound(
-      message: string = this.i18n.t('http-messages.NOT_FOUND'),
-      code: number = HttpStatus.NOT_FOUND,
+    message: string = this.i18n.t('http-messages.NOT_FOUND'),
+    code: number = HttpStatus.NOT_FOUND,
   ) {
     return {
       code: 404,
@@ -86,8 +86,8 @@ export class Responder {
    * @param code
    */
   httpBadRequest(
-      message: string = this.i18n.t('http-messages.BAD_REQUEST'),
-      code: number = HttpStatus.BAD_REQUEST,
+    message: string = this.i18n.t('http-messages.BAD_REQUEST'),
+    code: number = HttpStatus.BAD_REQUEST,
   ) {
     return {
       code,

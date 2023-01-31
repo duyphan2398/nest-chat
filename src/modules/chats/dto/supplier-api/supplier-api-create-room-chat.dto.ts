@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsNumber } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import {IsMemberExist} from "../../rules/exist-member.rule";
+import { IsMemberExist } from '../../rules/exist-member.rule';
 
 export class SupplierApiCreateRoomChatDto {
   @IsNotEmpty({ message: 'validation.IsNotEmpty' })

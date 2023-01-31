@@ -3,12 +3,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmConfig } from './core/typeorm/typeorm-config';
 import { ChatsModule } from './modules/chats/chats.module';
-import {AcceptLanguageResolver, I18nModule, QueryResolver} from 'nestjs-i18n';
+import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
 import { HttpExceptionFilter } from './core/exceptions/http-exception.filter';
-import {APP_FILTER} from '@nestjs/core';
+import { APP_FILTER } from '@nestjs/core';
 import * as path from 'path';
 import { Global } from '@nestjs/common';
-import {I18nException} from "./core/exceptions/i18n.exception";
+import { I18nException } from './core/exceptions/i18n.exception';
 
 @Global()
 @Module({
