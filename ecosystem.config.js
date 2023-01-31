@@ -16,7 +16,7 @@ module.exports = {
             repo: 'git@github.com:duyphan2398/nest-chat.git',
             ssh_options: ['ForwardAgent=yes'],
             path: '/var/www/CHAT/nest-chat/',
-            'post-deploy': 'npm install && npm run build && pm2 start',
+            'post-deploy': 'npm install && npm run build &&  pm2 start dist/main.js --name "nest-chat" -- run "start:prod"',
         },
     }
 }
