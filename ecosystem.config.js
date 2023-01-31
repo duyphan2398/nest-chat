@@ -1,20 +1,22 @@
 module.exports = {
-    apps : [
+    apps: [
         {
-            name: "nest-chat",
-            script: "./dist/main.js",
-            watch: true,
-            instance_var: [
-                'ENV_NAME',
-                'DB_HOST',
-                'DB_PORT',
-                'DB_DATABASE',
-                'DB_USERNAME',
-                'DB_PASSWORD',
-                'FALLBACK_LANGUAGE',
-                'TZ',
-                'IMAGE_SERVER_DOMAIN'
-            ],
-        }
-    ]
+            name: 'nest-chat',
+            exec_mode: 'cluster',
+            instances: 'max',
+            script: './dist/main.js',
+            args: '',
+        },
+    ],
+    deploy: {
+        develop: {
+            user: 'admin',
+            host: ['45.251.114.197'],
+            ref: 'origin/master',
+            repo: 'git@github.com:duyphan2398/nest-chat.git',
+            ssh_options: ['ForwardAgent=yes'],
+            path: '/var/www/CHAT/nest-chat/',
+            'post-deploy': 'npm install && npm run build && pm2 start',
+        },
+    }
 }
