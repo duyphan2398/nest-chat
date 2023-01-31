@@ -9,7 +9,7 @@ module.exports = {
         },
     ],
     deploy: {
-        develop: {
+        staging: {
             user: 'admin',
             host: ['45.251.114.197'],
             ref: 'origin/master',
