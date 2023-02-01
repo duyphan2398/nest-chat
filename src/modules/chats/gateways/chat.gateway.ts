@@ -361,6 +361,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             newRoom.member_id,
           );
 
+        // Get state of partner
+        memberRooms.forEach((roomChat) => {
+          if (
+              this.onlineClients[this.supplierRoomPrefix(roomChat.expert_id)]
+                  ?.length
+          ) {
+            roomChat.partner_state = PARTNER_STATE.ONLINE;
+          } else {
+            roomChat.partner_state = PARTNER_STATE.OFFLINE;
+          }
+        });
+
         this.server
           .to(this.memberRoomPrefix(newRoom.member_id))
           .emit('load-rooms', this.gatewayResponder.ok(memberRooms));
@@ -372,6 +384,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           await this.roomChatsService.getListRoomChatByExpertId(
             newRoom.expert_id,
           );
+
+        // Get state of partner
+        supplierRooms.forEach((roomChat) => {
+          if (
+              this.onlineClients[this.memberRoomPrefix(roomChat.member_id)]
+                  ?.length
+          ) {
+            roomChat.partner_state = PARTNER_STATE.ONLINE;
+          } else {
+            roomChat.partner_state = PARTNER_STATE.OFFLINE;
+          }
+        });
 
         this.server
           .to(this.supplierRoomPrefix(newRoom.expert_id))

@@ -25,6 +25,9 @@ export class RoomChat extends BaseEntity {
   @Column()
   status: string;
 
+  // Addition property
+  partner_state: number;
+
   /**
    * Relation: Member
    */
