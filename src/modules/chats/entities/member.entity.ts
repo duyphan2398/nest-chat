@@ -6,9 +6,8 @@ import {
   JoinColumn,
   BaseEntity,
 } from 'typeorm';
-import { Expert } from './expert.entity';
 import { RoomChat } from './room-chat.entity';
-import { Exclude, Expose, Transform } from 'class-transformer';
+import { Exclude } from 'class-transformer';
 import { ConnectedMember } from './connected-member.entity';
 
 @Entity('ape_members')
@@ -64,18 +63,18 @@ export class Member extends BaseEntity {
   status: number;
 
   /**
-   * Relation: Experts
-   */
-  @OneToMany((type) => Expert, (expert) => expert.member)
-  @JoinColumn({ name: 'member_id' })
-  experts: Expert[];
-
-  /**
-   * Relation: RoomChats
+   * Relation: RoomChats (Owner)
    */
   @OneToMany((type) => RoomChat, (room_chat) => room_chat.member)
   @JoinColumn({ name: 'member_id' })
-  room_chats: RoomChat[];
+  owner_room_chats: RoomChat[];
+
+  /**
+   * Relation: RoomChats (Partner)
+   */
+  @OneToMany((type) => RoomChat, (room_chat) => room_chat.partner)
+  @JoinColumn({ name: 'partner_id' })
+  partner_room_chats: RoomChat[];
 
   /**
    * Relation: ConnectedMembers
