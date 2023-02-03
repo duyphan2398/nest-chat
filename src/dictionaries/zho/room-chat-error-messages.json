@@ -1,4 +1,5 @@
 {
   "ROOM_CHAT_EXISTED": "Room Chat is existed",
+  "CREATE_ROOM_FOR_YOURSELF": "Can not create room for yourself",
   "ROOM_CHAT_NOT_FOUND": "Room Chat is not exist"
 }

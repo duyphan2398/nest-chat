@@ -22,16 +22,10 @@ export class RoomChatDetail extends BaseEntity {
   sender_id: number;
 
   @Column()
-  sender_type: string;
-
-  @Column()
   sender_status: number;
 
   @Column()
   receiver_id: number;
-
-  @Column()
-  receiver_type: string;
 
   @Column()
   receiver_status: number;

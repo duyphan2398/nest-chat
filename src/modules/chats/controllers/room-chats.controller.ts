@@ -34,6 +34,12 @@ export class RoomChatsController {
       },
     ]);
 
+    if (createChatRoomDto.partner_id === authMember.id) {
+      return this.responder.httpBadRequest(
+        this.i18n.t('room-chat-error-messages.CREATE_ROOM_FOR_YOURSELF'),
+      );
+    }
+
     if (existedRoomChat) {
       return this.responder.httpBadRequest(
         this.i18n.t('room-chat-error-messages.ROOM_CHAT_EXISTED'),

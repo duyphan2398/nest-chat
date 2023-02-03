@@ -18,7 +18,7 @@ import {
   ROOM_CHAT_DETAIL_TYPE,
   SENDER_STATUS,
 } from '../enums/room-chat-details.enum';
-import moment from 'moment';
+import { now } from 'moment';
 
 @WebSocketGateway({
   namespace: 'chat',
@@ -222,17 +222,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('created-room')
-  async onCreatedRoom(socket: Socket, { id }) {
+  async onCreatedRoom(socket: Socket, { room_chat_id }) {
     let roomChats = null;
     let partnerId = null;
 
     try {
-      const newRoom = await this.roomChatsService.findByConditions({ id }, [
-        'member',
-        'partner',
-      ]);
+      const newRoom = await this.roomChatsService.findByConditions(
+        { id: room_chat_id },
+        ['member', 'partner'],
+      );
       if (!newRoom) {
-        throw new BadRequestException('Room is not exist');
+        throw new BadRequestException('Room Chat is not exist');
       }
 
       // Emit and join room to member
@@ -296,33 +296,56 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('send-chat-message')
-  async onSendChatMessage(
-    socket: Socket,
-    { room_chat_id, content, partner_id, member_id },
-  ) {
-    const authUser = socket.handshake.auth;
-
-    const chatMessageData = {
-      room_chat_id,
-      content,
-      sender_id: authUser.id,
-      sender_status: SENDER_STATUS.SEEN,
-      receiver_id: partner_id == authUser.id ? member_id : partner_id,
-      receiver_status: RECEIVER_STATUS.NOT_SEEN,
-      chat_time: moment(),
-      type: ROOM_CHAT_DETAIL_TYPE.TEXT,
-    };
-
+  async onSendChatMessage(socket: Socket, { room_chat_id, content }) {
     try {
+      const trimContent = content?.trim();
+
+      if (!trimContent) {
+        throw new BadRequestException('Content can not empty');
+      }
+
+      const authUser = socket.handshake.auth;
+      const roomChat = await this.roomChatsService.findByConditions([
+        {
+          id: room_chat_id,
+          member_id: authUser.id,
+        },
+        {
+          id: room_chat_id,
+          partner_id: authUser.id,
+        },
+      ]);
+
+      if (!roomChat) {
+        throw new BadRequestException('Room Chat is not exist');
+      }
+
+      const receiverId =
+        roomChat.member_id == authUser.id
+          ? roomChat.partner_id
+          : roomChat.member_id;
+
+      const chatMessageData = {
+        room_chat_id,
+        content: trimContent,
+        sender_id: authUser.id,
+        sender_status: SENDER_STATUS.SEEN,
+        receiver_id: receiverId,
+        receiver_status: RECEIVER_STATUS.NOT_SEEN,
+        chat_time: now(),
+        type: ROOM_CHAT_DETAIL_TYPE.TEXT,
+      };
+
       // Emit to clients
       this.server
-        .to(this.memberRoomPrefix(partner_id))
-        .to(this.memberRoomPrefix(member_id))
+        .to(this.memberRoomPrefix(receiverId))
+        .to(this.memberRoomPrefix(authUser.id))
         .emit('new-chat-message', this.gatewayResponder.ok(chatMessageData));
 
       // Save into database
       await this.roomChatDetailService.save(chatMessageData);
     } catch (exception) {
+      console.log(exception);
       ChatGateway.handleEmitErrorNotice(
         socket,
         'send-chat-message',
@@ -332,17 +355,30 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('typing-chat-message')
-  async onTypingChatMessage(
-    socket: Socket,
-    { room_chat_id, partner_id, member_id },
-  ) {
-    const authUser = socket.handshake.auth;
+  async onTypingChatMessage(socket: Socket, { room_chat_id }) {
     try {
+      const authUser = socket.handshake.auth;
+      const roomChat = await this.roomChatsService.findByConditions([
+        {
+          id: room_chat_id,
+          member_id: authUser.id,
+        },
+        {
+          id: room_chat_id,
+          partner_id: authUser.id,
+        },
+      ]);
+      if (!roomChat) {
+        throw new BadRequestException('Room Chat is not exist');
+      }
+
       // Emit to supplier
       this.server
         .to(
           this.memberRoomPrefix(
-            partner_id == authUser.id ? member_id : partner_id,
+            roomChat.member_id == authUser.id
+              ? roomChat.partner_id
+              : roomChat.member_id,
           ),
         )
         .emit(
