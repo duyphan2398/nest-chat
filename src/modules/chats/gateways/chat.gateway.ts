@@ -1,6 +1,7 @@
 import {
   OnGatewayConnection,
   OnGatewayDisconnect,
+  OnGatewayInit,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
@@ -27,7 +28,9 @@ import { now } from 'moment';
     methods: ['GET', 'POST'],
   },
 })
-export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class ChatGateway
+  implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
+{
   @WebSocketServer() server: Server;
 
   private memberRoomPrefix = (id, sessionId: any = 'sessionId') =>
@@ -44,6 +47,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @Inject(GatewayResponder)
     private readonly gatewayResponder: GatewayResponder,
   ) {}
+
+  async afterInit(server: any) {
+    // remove all connection members from DB
+    await this.connectedMembersService.deleteAll();
+  }
 
   /**
    * Event: success-notice

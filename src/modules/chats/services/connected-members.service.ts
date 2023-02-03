@@ -12,12 +12,6 @@ export class ConnectedMembersService {
     @Inject(I18nService) private i18n: I18nService,
   ) {}
 
-  async findManyByConditions(condition: object): Promise<ConnectedMember[]> {
-    return await this.connectedMemberRepo.find({
-      where: condition,
-    });
-  }
-
   async save(data: object): Promise<ConnectedMember> {
     const connectedMember = this.connectedMemberRepo.create(data);
     return await this.connectedMemberRepo.save(connectedMember);
@@ -25,5 +19,12 @@ export class ConnectedMembersService {
 
   async deleteByConnectedId(connectedId: string) {
     return await this.connectedMemberRepo.delete({ connected_id: connectedId });
+  }
+
+  async deleteAll() {
+    return await this.connectedMemberRepo
+      .createQueryBuilder('connected_member')
+      .delete()
+      .execute();
   }
 }

@@ -11,7 +11,7 @@ export class MemberAuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<RequestInterface>();
     const token = request.headers.authorization || '';
 
-    // Check token and assign global auth expert
+    // Check token and assign global auth member
     request.authMember = await this.membersService.verifyToken(token);
 
     return true;

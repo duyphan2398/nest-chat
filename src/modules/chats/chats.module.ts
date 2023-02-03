@@ -17,6 +17,8 @@ import { IsMemberExistConstraint } from './rules/exist-member.rule';
 import { RoomChatDetailsController } from './controllers/room-chat-details.controller';
 import { IsRoomChatExistConstraint } from './rules/exist-room-chat.rule';
 import { RoomChatDetailsService } from './services/room-chat-details.service';
+import { RoomChatDetailImagesService } from './services/room-chat-detail-images.service';
+import { RoomChatDetailImagesController } from './controllers/room-chat-detail-images.controller';
 
 @Module({
   imports: [
@@ -32,6 +34,7 @@ import { RoomChatDetailsService } from './services/room-chat-details.service';
     MembersController,
     RoomChatsController,
     RoomChatDetailsController,
+    RoomChatDetailImagesController,
   ],
   providers: [
     IsRoomChatExistConstraint,
@@ -40,6 +43,7 @@ import { RoomChatDetailsService } from './services/room-chat-details.service';
     MembersService,
     RoomChatsService,
     RoomChatDetailsService,
+    RoomChatDetailImagesService,
     Responder,
     GatewayResponder,
     ChatGateway,
