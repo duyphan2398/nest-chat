@@ -27,6 +27,11 @@ export class RoomChatsService {
     });
   }
 
+  async save(data: object): Promise<RoomChat> {
+    const roomChat = this.roomChatsRepo.create(data);
+    return await this.roomChatsRepo.save(roomChat);
+  }
+
   async getListRoomChatByMemberId(memberId): Promise<RoomChat[]> {
     return await this.roomChatsRepo
       .createQueryBuilder('room_chat')
@@ -36,9 +41,10 @@ export class RoomChatsService {
         'room_chat_details',
         (qb: SelectQueryBuilder<RoomChatDetail[]>) => {
           return qb.andWhere(
-            'room_chat_details.receiver_status = :receiver_status',
+            'room_chat_details.receiver_status = :receiver_status and room_chat_details.receiver_id = :receiver_id',
             {
               receiver_status: RECEIVER_STATUS.NOT_SEEN,
+              receiver_id: memberId,
             },
           );
         },
@@ -56,10 +62,5 @@ export class RoomChatsService {
       )
       .orderBy('room_chat.updated', 'DESC')
       .getMany();
-  }
-
-  async save(data: object): Promise<RoomChat> {
-    const roomChat = this.roomChatsRepo.create(data);
-    return await this.roomChatsRepo.save(roomChat);
   }
 }
