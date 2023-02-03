@@ -30,47 +30,30 @@ export class RoomChatsService {
   async getListRoomChatByMemberId(memberId): Promise<RoomChat[]> {
     return await this.roomChatsRepo
       .createQueryBuilder('room_chat')
-      // .loadRelationCountAndMap(
-      //   'room_chat.not_seen_count',
-      //   'room_chat.room_chat_details',
-      //   'room_chat_details',
-      //   (qb: SelectQueryBuilder<RoomChatDetail[]>) => {
-      //     return qb
-      //       .andWhere('room_chat_details.receiver_status = :receiver_status', {
-      //         receiver_status: RECEIVER_STATUS.NOT_SEEN,
-      //       });
-      //   },
-      // )
-      // .leftJoin('room_chat.room_chat_details', 'room_chat_details')
-      .leftJoinAndSelect('room_chat.member', 'member')
-        .leftJoinAndSelect('room_chat.partner', 'partner')
-      .where('member.id = :member_id', { member_id: memberId })
-        .orWhere('partner.id = :member_id', { member_id: memberId })
-      .orderBy('room_chat.updated', 'DESC')
-      .getMany();
-  }
-
-  async getListRoomChatByExpertId(expertId): Promise<RoomChat[]> {
-    return await this.roomChatsRepo
-      .createQueryBuilder('room_chat')
       .loadRelationCountAndMap(
         'room_chat.not_seen_count',
         'room_chat.room_chat_details',
         'room_chat_details',
         (qb: SelectQueryBuilder<RoomChatDetail[]>) => {
-          return qb
-            .andWhere('room_chat_details.receiver_status = :receiver_status', {
+          return qb.andWhere(
+            'room_chat_details.receiver_status = :receiver_status',
+            {
               receiver_status: RECEIVER_STATUS.NOT_SEEN,
-            });
+            },
+          );
         },
       )
-      .leftJoinAndSelect('room_chat.member', 'member')
       .leftJoin('room_chat.room_chat_details', 'room_chat_details')
-      .leftJoinAndSelect('room_chat.expert', 'expert')
-      .where('room_chat.expert_id = :expert_id', { expert_id: expertId })
-      .andWhere('member.status = :member_status', {
-        member_status: MEMBER_STATUS.ENABLE,
-      })
+      .leftJoinAndSelect('room_chat.member', 'member')
+      .leftJoinAndSelect('room_chat.partner', 'partner')
+      .where(
+        'member.id = :member_id and member.status = :status and partner.status = :status',
+        { member_id: memberId, status: MEMBER_STATUS.ENABLE },
+      )
+      .orWhere(
+        'partner.id = :member_id and partner.status = :status and member.status = :status ',
+        { member_id: memberId, status: MEMBER_STATUS.ENABLE },
+      )
       .orderBy('room_chat.updated', 'DESC')
       .getMany();
   }

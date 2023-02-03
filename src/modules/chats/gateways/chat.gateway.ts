@@ -1,18 +1,24 @@
 import {
   OnGatewayConnection,
   OnGatewayDisconnect,
-  OnGatewayInit,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import {BadRequestException, Inject} from '@nestjs/common';
-import {Server, Socket} from 'socket.io';
-import {MembersService} from '../services/members.service';
-import {RoomChatsService} from '../services/room-chats.service';
-import {ConnectedMembersService} from '../services/connected-members.service';
-import {GatewayResponder} from '../../../core/response/gateway.response';
-import {RoomChatDetailsService} from '../services/room-chat-details.service';
-import {PARTNER_STATE} from '../enums/room-chats.enum';
+import { BadRequestException, Inject } from '@nestjs/common';
+import { Server, Socket } from 'socket.io';
+import { MembersService } from '../services/members.service';
+import { RoomChatsService } from '../services/room-chats.service';
+import { ConnectedMembersService } from '../services/connected-members.service';
+import { GatewayResponder } from '../../../core/response/gateway.response';
+import { RoomChatDetailsService } from '../services/room-chat-details.service';
+import { PARTNER_STATE } from '../enums/room-chats.enum';
+import { SubscribeMessage } from '@nestjs/websockets';
+import {
+  RECEIVER_STATUS,
+  ROOM_CHAT_DETAIL_TYPE,
+  SENDER_STATUS,
+} from '../enums/room-chat-details.enum';
+import moment from 'moment';
 
 @WebSocketGateway({
   namespace: 'chat',
@@ -21,10 +27,10 @@ import {PARTNER_STATE} from '../enums/room-chats.enum';
     methods: ['GET', 'POST'],
   },
 })
-export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit {
+export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
 
-  private memberRoomPrefix = (id, sessionId: any = '') =>
+  private memberRoomPrefix = (id, sessionId: any = 'sessionId') =>
     `member-${id}-${sessionId}`;
 
   constructor(
@@ -104,37 +110,43 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
       // Get list rooms
       roomChats = await this.roomChatsService.getListRoomChatByMemberId(
-          authUser.id,
+        authUser.id,
       );
 
-      console.log(roomChats)
       // Join auth member room and auth member room by session id
       socket.join([
         this.memberRoomPrefix(authUser.id),
         this.memberRoomPrefix(authUser.id, sessionId),
       ]);
 
-
       // Emit online event to partner and Get state of partner
-      // for (const roomChat of roomChats) {
-      //   socket.to(this.supplierRoomPrefix(roomChat.expert_id)).emit(
-      //       'online',
-      //       this.gatewayResponder.ok({
-      //         room_chat_id: roomChat.id,
-      //         member_id: authUser.id,
-      //       }),
-      //   );
-      //
-      //   let sockets = await this.server.in(this.memberRoomPrefix(authUser.id)).fetchSockets();
-      //   roomChat.partner_state = sockets?.length ? PARTNER_STATE.ONLINE : PARTNER_STATE.OFFLINE;
-      //
-      // }
-      //
-      // socket.handshake.auth = authUser;
+      let partnerId = null;
+      for (const roomChat of roomChats) {
+        partnerId =
+          roomChat.member_id === authUser.id
+            ? roomChat.partner_id
+            : roomChat.member_id;
 
+        socket.to(this.memberRoomPrefix(partnerId)).emit(
+          'online',
+          this.gatewayResponder.ok({
+            room_chat_id: roomChat.id,
+            member_id: authUser.id,
+          }),
+        );
+
+        // Get state of partner
+        const sockets = await this.server
+          .in(this.memberRoomPrefix(partnerId))
+          .fetchSockets();
+        roomChat.partner_state = sockets?.length
+          ? PARTNER_STATE.ONLINE
+          : PARTNER_STATE.OFFLINE;
+      }
+
+      socket.handshake.auth = authUser;
       socket.emit('load-rooms', this.gatewayResponder.ok(roomChats));
     } catch (exception) {
-      console.log(exception)
       ChatGateway.handleEmitErrorNotice(
         socket,
         'handleConnection',
@@ -146,307 +158,233 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   }
 
   async handleDisconnect(socket: Socket) {
-    console.log('Dis')
-    // const authUser = socket.handshake.auth;
-    //
-    // try {
-    //   // Remove in onlineClients
-    //   let sockets = await this.server.in(this.memberRoomPrefix(authUser.id)).fetchSockets();
-    //
-    //   // Check this member offline and emit offline event
-    //   if (!this.onlineClients[this.memberRoomPrefix(auth.id)]?.length) {
-    //     // Get list rooms
-    //     const roomChats =
-    //         await this.roomChatsService.getListRoomChatByMemberId(auth.id);
-    //
-    //     // Emit to expert
-    //     roomChats.forEach((roomChat) => {
-    //       socket.to(this.supplierRoomPrefix(roomChat.expert_id)).emit(
-    //           'offline',
-    //           this.gatewayResponder.ok({
-    //             room_chat_id: roomChat.id,
-    //             member_id: auth.id,
-    //           }),
-    //       );
-    //     });
-    //   }
-    //
-    //   // remove connection from DB
-    //   await this.connectedMembersService.deleteByConnectedId(socket.id);
+    const authUser = socket.handshake.auth;
+    let partnerId = null;
 
+    try {
+      // Check state of authUser
+      const sockets = await this.server
+        .in(this.memberRoomPrefix(authUser.id))
+        .fetchSockets();
+
+      // If this authUser offline completely  -> emit offline event
+      if (!sockets?.length) {
+        // Get list rooms
+        const roomChats = await this.roomChatsService.getListRoomChatByMemberId(
+          authUser.id,
+        );
+
+        // Emit offline event to partners
+        for (const roomChat of roomChats) {
+          partnerId =
+            roomChat.member_id === authUser.id
+              ? roomChat.partner_id
+              : roomChat.member_id;
+
+          socket.to(this.memberRoomPrefix(partnerId)).emit(
+            'offline',
+            this.gatewayResponder.ok({
+              room_chat_id: roomChat.id,
+              member_id: authUser.id,
+            }),
+          );
+        }
+      }
+
+      // remove connection from DB
+      await this.connectedMembersService.deleteByConnectedId(socket.id);
 
       socket.disconnect();
-    // } catch (exception) {
-    //   ChatGateway.handleEmitErrorNotice(
-    //       socket,
-    //       'handleDisconnect',
-    //       this.gatewayResponder.badRequest(exception.message),
-    //   );
-    // }
+    } catch (exception) {
+      ChatGateway.handleEmitErrorNotice(
+        socket,
+        'handleDisconnect',
+        this.gatewayResponder.badRequest(exception.message),
+      );
+    }
   }
 
-  afterInit(server: any): any {
-    console.log('Inited')
+  @SubscribeMessage('logout')
+  async onLogout(socket: Socket) {
+    const sessionId = socket.handshake.query.session_id;
+    const authUser = socket.handshake.auth;
+
+    try {
+      socket.to(this.memberRoomPrefix(authUser.id, sessionId)).emit('logout');
+      socket.disconnect();
+    } catch (exception) {
+      ChatGateway.handleEmitErrorNotice(
+        socket,
+        'logout',
+        this.gatewayResponder.badRequest(exception.message),
+      );
+    }
   }
 
-  // @SubscribeMessage('logout')
-  // async onLogout(socket: Socket) {
-  //   const routePrefix = socket.handshake.query.route_prefix;
-  //   const sessionId = socket.handshake.query.session_id;
-  //   const auth = socket.handshake.auth;
-  //
-  //   try {
-  //     switch (routePrefix) {
-  //       case ROUTE_PREFIX.MEMBER_PAGE:
-  //         socket.to(this.memberRoomPrefix(auth.id, sessionId)).emit('logout');
-  //         break;
-  //
-  //       case ROUTE_PREFIX.SUPPLIER_DASHBOARD:
-  //         socket.to(this.supplierRoomPrefix(auth.id, sessionId)).emit('logout');
-  //         break;
-  //
-  //       default:
-  //         throw new BadRequestException('Route Prefix is invalid');
-  //     }
-  //
-  //     socket.disconnect();
-  //   } catch (exception) {
-  //     ChatGateway.handleEmitErrorNotice(
-  //       socket,
-  //       'logout',
-  //       this.gatewayResponder.badRequest(exception.message),
-  //     );
-  //   }
-  // }
-  //
-  // @SubscribeMessage('created-room')
-  // async onCreatedRoom(socket: Socket, { id }) {
-  //   try {
-  //     const newRoom = await this.roomChatsService.findByConditions({ id }, [
-  //       'member',
-  //       'expert',
-  //     ]);
-  //     if (!newRoom) {
-  //       throw new BadRequestException('Room is not exist');
-  //     }
-  //
-  //     // Emit and join room to member
-  //     if (newRoom?.member) {
-  //       const memberRooms =
-  //         await this.roomChatsService.getListRoomChatByMemberId(
-  //           newRoom.member_id,
-  //         );
-  //
-  //       // Get state of partner
-  //       memberRooms.forEach((roomChat) => {
-  //         if (
-  //             this.onlineClients[this.supplierRoomPrefix(roomChat.expert_id)]
-  //                 ?.length
-  //         ) {
-  //           roomChat.partner_state = PARTNER_STATE.ONLINE;
-  //         } else {
-  //           roomChat.partner_state = PARTNER_STATE.OFFLINE;
-  //         }
-  //       });
-  //
-  //       this.server
-  //         .to(this.memberRoomPrefix(newRoom.member_id))
-  //         .emit('load-rooms', this.gatewayResponder.ok(memberRooms));
-  //     }
-  //
-  //     // Emit to expert
-  //     if (newRoom?.expert) {
-  //       const supplierRooms =
-  //         await this.roomChatsService.getListRoomChatByExpertId(
-  //           newRoom.expert_id,
-  //         );
-  //
-  //       // Get state of partner
-  //       supplierRooms.forEach((roomChat) => {
-  //         if (
-  //             this.onlineClients[this.memberRoomPrefix(roomChat.member_id)]
-  //                 ?.length
-  //         ) {
-  //           roomChat.partner_state = PARTNER_STATE.ONLINE;
-  //         } else {
-  //           roomChat.partner_state = PARTNER_STATE.OFFLINE;
-  //         }
-  //       });
-  //
-  //       this.server
-  //         .to(this.supplierRoomPrefix(newRoom.expert_id))
-  //         .emit('load-rooms', this.gatewayResponder.ok(supplierRooms));
-  //     }
-  //   } catch (exception) {
-  //     ChatGateway.handleEmitErrorNotice(
-  //       socket,
-  //       'created-room',
-  //       this.gatewayResponder.badRequest(exception.message),
-  //     );
-  //   }
-  // }
-  //
-  // @SubscribeMessage('send-chat-message')
-  // async onSendChatMessage(
-  //   socket: Socket,
-  //   { room_chat_id, content, expert_id, member_id },
-  // ) {
-  //   let chatMessageData = {};
-  //   const routePrefix = socket.handshake.query.route_prefix;
-  //   const auth = socket.handshake.auth;
-  //
-  //   try {
-  //     switch (routePrefix) {
-  //       case ROUTE_PREFIX.MEMBER_PAGE:
-  //         chatMessageData = {
-  //           room_chat_id,
-  //           content,
-  //           sender_id: auth.id,
-  //           sender_status: SENDER_STATUS.SEEN,
-  //           sender_type: 'Member',
-  //           receiver_id: expert_id,
-  //           receiver_status: RECEIVER_STATUS.NOT_SEEN,
-  //           receiver_type: 'Expert',
-  //           chat_time: moment(),
-  //           type: ROOM_CHAT_DETAIL_TYPE.TEXT,
-  //         };
-  //
-  //         break;
-  //       case ROUTE_PREFIX.SUPPLIER_DASHBOARD:
-  //         chatMessageData = {
-  //           room_chat_id,
-  //           content,
-  //           sender_id: auth.id,
-  //           sender_status: SENDER_STATUS.SEEN,
-  //           sender_type: 'Expert',
-  //           receiver_id: member_id,
-  //           receiver_status: RECEIVER_STATUS.NOT_SEEN,
-  //           receiver_type: 'Member',
-  //           chat_time: moment(),
-  //           type: ROOM_CHAT_DETAIL_TYPE.TEXT,
-  //         };
-  //         break;
-  //       default:
-  //         throw new BadRequestException('Route Prefix is invalid');
-  //     }
-  //
-  //     // Emit to client
-  //     this.server
-  //       .to(this.supplierRoomPrefix(expert_id))
-  //       .emit('new-chat-message', this.gatewayResponder.ok(chatMessageData));
-  //
-  //     this.server
-  //       .to(this.memberRoomPrefix(member_id))
-  //       .emit('new-chat-message', this.gatewayResponder.ok(chatMessageData));
-  //
-  //     // Save into database
-  //     await this.roomChatDetailService.save(chatMessageData);
-  //   } catch (exception) {
-  //     ChatGateway.handleEmitErrorNotice(
-  //       socket,
-  //       'send-chat-message',
-  //       this.gatewayResponder.badRequest(exception.message),
-  //     );
-  //   }
-  // }
-  //
-  // @SubscribeMessage('typing-chat-message')
-  // async onTypingChatMessage(
-  //   socket: Socket,
-  //   { room_chat_id, expert_id, member_id },
-  // ) {
-  //   try {
-  //     const routePrefix = socket.handshake.query.route_prefix;
-  //
-  //     switch (routePrefix) {
-  //       case ROUTE_PREFIX.MEMBER_PAGE:
-  //         // Emit to supplier
-  //         this.server
-  //           .to(this.supplierRoomPrefix(expert_id))
-  //           .emit(
-  //             'typing-chat-message',
-  //             this.gatewayResponder.ok({ room_chat_id }),
-  //           );
-  //         break;
-  //       case ROUTE_PREFIX.SUPPLIER_DASHBOARD:
-  //         // Emit to member
-  //         this.server
-  //           .to(this.memberRoomPrefix(member_id))
-  //           .emit(
-  //             'typing-chat-message',
-  //             this.gatewayResponder.ok({ room_chat_id }),
-  //           );
-  //         break;
-  //       default:
-  //         throw new BadRequestException('Route Prefix is invalid');
-  //     }
-  //   } catch (exception) {
-  //     ChatGateway.handleEmitErrorNotice(
-  //       socket,
-  //       'typing-chat-message',
-  //       this.gatewayResponder.badRequest(exception.message),
-  //     );
-  //   }
-  // }
-  //
-  // @SubscribeMessage('seen-room')
-  // async onSeenRoom(socket: Socket, { room_chat_id }) {
-  //   try {
-  //     const routePrefix = socket.handshake.query.route_prefix;
-  //     const auth = socket.handshake.auth;
-  //
-  //     switch (routePrefix) {
-  //       case ROUTE_PREFIX.MEMBER_PAGE:
-  //         // Emit to member
-  //         this.server
-  //           .to(this.memberRoomPrefix(auth.id))
-  //           .emit('seen-room', this.gatewayResponder.ok({ room_chat_id }));
-  //
-  //         // Update seen room chat details
-  //         await this.roomChatDetailService.update(
-  //           {
-  //             room_chat_id,
-  //             receiver_id: auth.id,
-  //             receiver_type: RECEIVER_TYPE.MEMBER,
-  //             receiver_status: SENDER_STATUS.NOT_SEEN,
-  //           },
-  //           {
-  //             receiver_status: SENDER_STATUS.SEEN,
-  //           },
-  //         );
-  //
-  //         break;
-  //
-  //       case ROUTE_PREFIX.SUPPLIER_DASHBOARD:
-  //         // Emit to expert
-  //         this.server
-  //           .to(this.supplierRoomPrefix(auth.id))
-  //           .emit('seen-room', this.gatewayResponder.ok({ room_chat_id }));
-  //
-  //         // Update seen room chat details
-  //         await this.roomChatDetailService.update(
-  //           {
-  //             room_chat_id,
-  //             receiver_id: auth.id,
-  //             receiver_type: RECEIVER_TYPE.EXPERT,
-  //             receiver_status: SENDER_STATUS.NOT_SEEN,
-  //           },
-  //           {
-  //             receiver_status: SENDER_STATUS.SEEN,
-  //           },
-  //         );
-  //
-  //         break;
-  //
-  //       default:
-  //         throw new BadRequestException('Route Prefix is invalid');
-  //     }
-  //   } catch (exception) {
-  //     ChatGateway.handleEmitErrorNotice(
-  //       socket,
-  //       'seen-room',
-  //       this.gatewayResponder.badRequest(exception.message),
-  //     );
-  //   }
-  // }
+  @SubscribeMessage('created-room')
+  async onCreatedRoom(socket: Socket, { id }) {
+    let roomChats = null;
+    let partnerId = null;
+
+    try {
+      const newRoom = await this.roomChatsService.findByConditions({ id }, [
+        'member',
+        'partner',
+      ]);
+      if (!newRoom) {
+        throw new BadRequestException('Room is not exist');
+      }
+
+      // Emit and join room to member
+      if (newRoom?.member) {
+        roomChats = await this.roomChatsService.getListRoomChatByMemberId(
+          newRoom.member_id,
+        );
+
+        for (const roomChat of roomChats) {
+          partnerId =
+            roomChat.member_id === newRoom.member_id
+              ? roomChat.partner_id
+              : roomChat.member_id;
+
+          // Get state of partner
+          const sockets = await this.server
+            .in(this.memberRoomPrefix(partnerId))
+            .fetchSockets();
+          roomChat.partner_state = sockets?.length
+            ? PARTNER_STATE.ONLINE
+            : PARTNER_STATE.OFFLINE;
+        }
+
+        this.server
+          .to(this.memberRoomPrefix(newRoom.member_id))
+          .emit('load-rooms', this.gatewayResponder.ok(roomChats));
+      }
+
+      // Emit to partner
+      if (newRoom?.partner) {
+        roomChats = await this.roomChatsService.getListRoomChatByMemberId(
+          newRoom.partner_id,
+        );
+
+        for (const roomChat of roomChats) {
+          partnerId =
+            roomChat.member_id === newRoom.partner_id
+              ? roomChat.partner_id
+              : roomChat.member_id;
+
+          // Get state of partner
+          const sockets = await this.server
+            .in(this.memberRoomPrefix(partnerId))
+            .fetchSockets();
+          roomChat.partner_state = sockets?.length
+            ? PARTNER_STATE.ONLINE
+            : PARTNER_STATE.OFFLINE;
+        }
+
+        this.server
+          .to(this.memberRoomPrefix(newRoom.partner_id))
+          .emit('load-rooms', this.gatewayResponder.ok(roomChats));
+      }
+    } catch (exception) {
+      ChatGateway.handleEmitErrorNotice(
+        socket,
+        'created-room',
+        this.gatewayResponder.badRequest(exception.message),
+      );
+    }
+  }
+
+  @SubscribeMessage('send-chat-message')
+  async onSendChatMessage(
+    socket: Socket,
+    { room_chat_id, content, partner_id, member_id },
+  ) {
+    const authUser = socket.handshake.auth;
+
+    const chatMessageData = {
+      room_chat_id,
+      content,
+      sender_id: authUser.id,
+      sender_status: SENDER_STATUS.SEEN,
+      receiver_id: partner_id == authUser.id ? member_id : partner_id,
+      receiver_status: RECEIVER_STATUS.NOT_SEEN,
+      chat_time: moment(),
+      type: ROOM_CHAT_DETAIL_TYPE.TEXT,
+    };
+
+    try {
+      // Emit to clients
+      this.server
+        .to(this.memberRoomPrefix(partner_id))
+        .to(this.memberRoomPrefix(member_id))
+        .emit('new-chat-message', this.gatewayResponder.ok(chatMessageData));
+
+      // Save into database
+      await this.roomChatDetailService.save(chatMessageData);
+    } catch (exception) {
+      ChatGateway.handleEmitErrorNotice(
+        socket,
+        'send-chat-message',
+        this.gatewayResponder.badRequest(exception.message),
+      );
+    }
+  }
+
+  @SubscribeMessage('typing-chat-message')
+  async onTypingChatMessage(
+    socket: Socket,
+    { room_chat_id, partner_id, member_id },
+  ) {
+    const authUser = socket.handshake.auth;
+    try {
+      // Emit to supplier
+      this.server
+        .to(
+          this.memberRoomPrefix(
+            partner_id == authUser.id ? member_id : partner_id,
+          ),
+        )
+        .emit(
+          'typing-chat-message',
+          this.gatewayResponder.ok({ room_chat_id }),
+        );
+    } catch (exception) {
+      ChatGateway.handleEmitErrorNotice(
+        socket,
+        'typing-chat-message',
+        this.gatewayResponder.badRequest(exception.message),
+      );
+    }
+  }
+
+  @SubscribeMessage('seen-room')
+  async onSeenRoom(socket: Socket, { room_chat_id }) {
+    try {
+      const authUser = socket.handshake.auth;
+
+      // Emit to member
+      this.server
+        .to(this.memberRoomPrefix(authUser.id))
+        .emit('seen-room', this.gatewayResponder.ok({ room_chat_id }));
+
+      // Update seen room chat details
+      await this.roomChatDetailService.update(
+        {
+          room_chat_id,
+          receiver_id: authUser.id,
+          receiver_status: RECEIVER_STATUS.NOT_SEEN,
+        },
+        {
+          receiver_status: RECEIVER_STATUS.SEEN,
+        },
+      );
+    } catch (exception) {
+      ChatGateway.handleEmitErrorNotice(
+        socket,
+        'seen-room',
+        this.gatewayResponder.badRequest(exception.message),
+      );
+    }
+  }
 }

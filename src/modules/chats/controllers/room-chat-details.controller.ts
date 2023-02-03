@@ -4,7 +4,7 @@ import { RequestInterface } from '../../../core/request/request.interface';
 import { Responder } from '../../../core/response/responder.response';
 import { RoomChatsService } from '../services/room-chats.service';
 import { I18nService } from 'nestjs-i18n';
-import { ApiGetRoomChatDetailsListDto } from '../dto/api/api-get-room-chat-details-list.dto';
+import { GetRoomChatDetailsListDto } from '../dto/get-room-chat-details-list.dto';
 import { RoomChatDetailsService } from '../services/room-chat-details.service';
 
 @Controller()
@@ -22,15 +22,21 @@ export class RoomChatDetailsController {
   @UseGuards(MemberAuthGuard)
   async apiGetList(
     @Req() request: RequestInterface,
-    @Query() getRoomChatDetailsListDto: ApiGetRoomChatDetailsListDto,
+    @Query() getRoomChatDetailsListDto: GetRoomChatDetailsListDto,
   ) {
     const roomId = getRoomChatDetailsListDto.room_chat_id;
     const authMember = request.authMember;
 
-    const roomChat = await this.roomChatsService.findByConditions({
-      id: roomId,
-      member_id: authMember.id,
-    });
+    const roomChat = await this.roomChatsService.findByConditions([
+      {
+        id: roomId,
+        member_id: authMember.id,
+      },
+      {
+        id: roomId,
+        partner_id: authMember.id,
+      },
+    ]);
 
     if (!roomChat) {
       return this.responder.httpBadRequest(
