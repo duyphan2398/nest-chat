@@ -12,7 +12,6 @@ import {
   ParseIntPipe,
   Res,
   StreamableFile,
-  NotFoundException,
 } from '@nestjs/common';
 import { MemberAuthGuard } from '../../../guards/member-auth.guard';
 import { RequestInterface } from '../../../core/request/request.interface';
