@@ -2,11 +2,10 @@ import {
   ExceptionFilter,
   Catch,
   ArgumentsHost,
-  BadRequestException,
   HttpStatus,
   Inject,
 } from '@nestjs/common';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { I18nValidationException } from 'nestjs-i18n';
 import { I18nService } from 'nestjs-i18n';
 
@@ -17,13 +16,11 @@ export class I18nException implements ExceptionFilter {
   async catch(exception: I18nValidationException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
-    const request = ctx.getRequest<Request>();
-    const status = exception.getStatus();
     const responseException = exception.getResponse();
     const message = exception.message;
 
-    let firstError = exception.errors.shift();
-    let errorMessage = Object.values(firstError.constraints).shift();
+    const firstError = exception.errors.shift();
+    const errorMessage = Object.values(firstError.constraints).shift();
 
     const returnData = {
       code: HttpStatus.UNPROCESSABLE_ENTITY,

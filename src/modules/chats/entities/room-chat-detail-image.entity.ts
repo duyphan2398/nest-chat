@@ -1,9 +1,11 @@
+import { Member } from './member.entity';
 import {
   Entity,
   Column,
   PrimaryGeneratedColumn,
   JoinColumn,
   OneToOne,
+  ManyToOne,
 } from 'typeorm';
 import { RoomChat } from './room-chat.entity';
 import { RoomChatDetail } from './room-chat-detail.entity';
@@ -18,16 +20,22 @@ export class RoomChatDetailImage extends BaseEntity {
   room_chat_detail_id: number;
 
   @Column()
-  path: string;
+  member_id: number;
+
+  @Column()
+  ori_name: string;
+
+  @Column()
+  re_name: string;
 
   @Column()
   size: number;
 
   @Column()
-  width: number;
+  type: string;
 
   @Column()
-  height: number;
+  path: string;
 
   /**
    * Relation: RoomChatDetail
@@ -38,4 +46,11 @@ export class RoomChatDetailImage extends BaseEntity {
   )
   @JoinColumn({ name: 'room_chat_detail_id' })
   room_chat_detail: RoomChat;
+
+  /**
+   * Relation: RoomChatDetail
+   */
+  @ManyToOne((type) => Member, (member) => member.room_chat_detail_images)
+  @JoinColumn({ name: 'member_id' })
+  member: Member;
 }

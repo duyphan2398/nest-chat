@@ -1,3 +1,5 @@
+import { MaxFileSizeValidator } from './rules/max-file-size.rule';
+import { FileTypeValidator } from './rules/file-type.rule';
 import { Module } from '@nestjs/common';
 import { MembersService } from './services/members.service';
 import { MembersController } from './controllers/members.controller';
@@ -37,6 +39,8 @@ import { RoomChatDetailImagesController } from './controllers/room-chat-detail-i
     RoomChatDetailImagesController,
   ],
   providers: [
+    FileTypeValidator,
+    MaxFileSizeValidator,
     IsRoomChatExistConstraint,
     IsMemberExistConstraint,
     ConnectedMembersService,

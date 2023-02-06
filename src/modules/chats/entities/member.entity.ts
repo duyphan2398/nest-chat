@@ -1,3 +1,4 @@
+import { RoomChatDetailImage } from './room-chat-detail-image.entity';
 import {
   Entity,
   Column,
@@ -43,7 +44,7 @@ export class Member extends BaseEntity {
     transformer: {
       to: (value: string) => value,
       from: (value: string) =>
-        value ? process.env.IMAGE_SERVER_DOMAIN + value : '',
+        value ? process.env.IMAGE_SERVER_HOST + value : '',
     },
   })
   avatar: string;
@@ -85,4 +86,14 @@ export class Member extends BaseEntity {
   )
   @JoinColumn({ name: 'member_id' })
   connected_members: ConnectedMember[];
+
+  /**
+   * Relation: RoomChatDetailImages
+   */
+  @OneToMany(
+    (type) => RoomChatDetailImage,
+    (room_chat_detail_image) => room_chat_detail_image.member,
+  )
+  @JoinColumn({ name: 'member_id' })
+  room_chat_detail_images: RoomChatDetailImage[];
 }

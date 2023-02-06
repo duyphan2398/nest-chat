@@ -2,5 +2,7 @@
   "IsNotEmpty": "{property} is not empty",
   "IsNumber": "{property} must be a number",
   "IsMemberExist": "Member is not exist",
-  "IsRoomChatExist": "Room Chat is not exist"
+  "IsRoomChatExist": "Room Chat is not exist",
+  "MaxFileSize": "This file must be lower than {size}KB",
+  "FileType": "This file must be in {type}"
 }

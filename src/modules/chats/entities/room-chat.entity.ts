@@ -34,7 +34,6 @@ export class RoomChat extends BaseEntity {
   @JoinColumn({ name: 'member_id' })
   member: Member;
 
-
   /**
    * Relation: Partner
    */
