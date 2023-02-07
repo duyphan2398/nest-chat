@@ -407,9 +407,6 @@ export class ChatGateway
           ? roomChat.partner_id
           : roomChat.member_id;
 
-      roomChatDetailImage.path =
-        process.env.CURRENT_HOST + '/' + roomChatDetailImage.path;
-
       const chatMessageData = {
         room_chat_id,
         content: '',
