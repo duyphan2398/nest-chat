@@ -61,13 +61,18 @@ export class RoomChatDetailImagesController {
     try {
       const authMember = request.authMember;
 
-      const roomChatDetailImage = await this.roomChatDetailImagesService.save(
-        file,
-        authMember,
-      );
+      const saveData = {
+        member_id: authMember.id,
+        ori_name: file.originalname,
+        re_name: file.filename,
+        size: file.size,
+        type: file.mimetype,
+        path: file.path,
+      };
 
-      roomChatDetailImage.path =
-        process.env.CURRENT_HOST + '/' + roomChatDetailImage.path;
+      const roomChatDetailImage = await this.roomChatDetailImagesService.save(
+        saveData,
+      );
 
       return this.responder.httpOK(roomChatDetailImage);
     } catch (e) {
@@ -90,8 +95,6 @@ export class RoomChatDetailImagesController {
       if (request.authMember.id !== file?.member_id) {
         return this.responder.httpNotFound();
       }
-
-      file.path = process.env.CURRENT_HOST + '/' + file.path;
 
       return this.responder.httpOK(file);
     } catch (e) {
@@ -116,7 +119,12 @@ export class RoomChatDetailImagesController {
         'Content-Disposition': `inline; filename="dummy.png"`,
       });
     } else {
-      fileStream = createReadStream(join(process.cwd(), file.path));
+      fileStream = createReadStream(
+        join(
+          process.cwd(),
+          file.path.replace(process.env.CURRENT_HOST + '/', ''),
+        ),
+      );
       res.set({
         'Content-Type': file.type,
         'Content-Disposition': `inline; filename="${file.re_name}"`,

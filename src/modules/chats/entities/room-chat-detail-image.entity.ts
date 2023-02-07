@@ -34,7 +34,13 @@ export class RoomChatDetailImage extends BaseEntity {
   @Column()
   type: string;
 
-  @Column()
+  @Column({
+    transformer: {
+      to: (value: string) => value,
+      from: (value: string) =>
+        value ? process.env.CURRENT_HOST + '/' + value : '',
+    },
+  })
   path: string;
 
   /**

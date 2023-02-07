@@ -1,3 +1,4 @@
+import { RoomChatDetailImagesService } from './../services/room-chat-detail-images.service';
 import {
   OnGatewayConnection,
   OnGatewayDisconnect,
@@ -44,6 +45,8 @@ export class ChatGateway
     private readonly roomChatsService: RoomChatsService,
     @Inject(RoomChatDetailsService)
     private readonly roomChatDetailService: RoomChatDetailsService,
+    @Inject(RoomChatDetailImagesService)
+    private readonly roomChatDetailImageService: RoomChatDetailImagesService,
     @Inject(GatewayResponder)
     private readonly gatewayResponder: GatewayResponder,
   ) {}
@@ -96,6 +99,7 @@ export class ChatGateway
    *
    * @param socket
    */
+
   async handleConnection(socket: Socket) {
     const token = socket.handshake.headers.authorization || '';
     const sessionId = socket.handshake.query.session_id || '';
@@ -357,6 +361,89 @@ export class ChatGateway
       ChatGateway.handleEmitErrorNotice(
         socket,
         'send-chat-message',
+        this.gatewayResponder.badRequest(exception.message),
+      );
+    }
+  }
+
+  @SubscribeMessage('send-chat-message-image')
+  async onSendChatMessageImage(socket: Socket, { room_chat_id, image_id }) {
+    try {
+      if (!image_id) {
+        throw new BadRequestException('Image is not empty');
+      }
+
+      const authUser = socket.handshake.auth;
+      const roomChat = await this.roomChatsService.findByConditions([
+        {
+          id: room_chat_id,
+          member_id: authUser.id,
+        },
+        {
+          id: room_chat_id,
+          partner_id: authUser.id,
+        },
+      ]);
+
+      if (!roomChat) {
+        throw new BadRequestException('Room Chat is not exist');
+      }
+
+      const roomChatDetailImage =
+        await this.roomChatDetailImageService.findByConditions([
+          {
+            id: image_id,
+            member_id: authUser.id,
+            room_chat_detail_id: null,
+          },
+        ]);
+
+      if (!roomChatDetailImage) {
+        throw new BadRequestException('Image is not exist');
+      }
+
+      const receiverId =
+        roomChat.member_id == authUser.id
+          ? roomChat.partner_id
+          : roomChat.member_id;
+
+      roomChatDetailImage.path =
+        process.env.CURRENT_HOST + '/' + roomChatDetailImage.path;
+
+      const chatMessageData = {
+        room_chat_id,
+        content: '',
+        sender_id: authUser.id,
+        sender_status: SENDER_STATUS.SEEN,
+        receiver_id: receiverId,
+        receiver_status: RECEIVER_STATUS.NOT_SEEN,
+        chat_time: now(),
+        type: ROOM_CHAT_DETAIL_TYPE.IMAGE,
+        room_chat_detail_image: roomChatDetailImage,
+      };
+
+      // Emit to clients
+      this.server
+        .to(this.memberRoomPrefix(receiverId))
+        .to(this.memberRoomPrefix(authUser.id))
+        .emit(
+          'new-chat-message-image',
+          this.gatewayResponder.ok(chatMessageData),
+        );
+
+      // Save into database
+      const roomChatDetail = await this.roomChatDetailService.save(
+        chatMessageData,
+      );
+      await this.roomChatDetailImageService.save({
+        id: roomChatDetailImage.id,
+        room_chat_detail_id: roomChatDetail.id,
+      });
+    } catch (exception) {
+      console.log(exception);
+      ChatGateway.handleEmitErrorNotice(
+        socket,
+        'send-chat-message-image',
         this.gatewayResponder.badRequest(exception.message),
       );
     }

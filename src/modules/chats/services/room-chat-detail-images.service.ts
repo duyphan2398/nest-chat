@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { RoomChatDetail } from '../entities/room-chat-detail.entity';
 import { RoomChatDetailImage } from '../entities/room-chat-detail-image.entity';
 
 @Injectable()
@@ -10,6 +9,16 @@ export class RoomChatDetailImagesService {
     @InjectRepository(RoomChatDetailImage)
     private roomChatDetailImageRepo: Repository<RoomChatDetailImage>,
   ) {}
+
+  async findByConditions(
+    condition: object,
+    relations = [],
+  ): Promise<RoomChatDetailImage> {
+    return await this.roomChatDetailImageRepo.findOne({
+      where: condition,
+      relations,
+    });
+  }
 
   async findById(id: number): Promise<RoomChatDetailImage> {
     return await this.roomChatDetailImageRepo.findOne({
@@ -27,15 +36,8 @@ export class RoomChatDetailImagesService {
     });
   }
 
-  async save(file: any, authUser: any): Promise<RoomChatDetailImage> {
-    const roomChatDetail = this.roomChatDetailImageRepo.create({
-      member_id: authUser.id,
-      ori_name: file.originalname,
-      re_name: file.filename,
-      size: file.size,
-      type: file.mimetype,
-      path: file.path,
-    });
+  async save(data: object): Promise<RoomChatDetailImage> {
+    const roomChatDetail = this.roomChatDetailImageRepo.create(data);
     return await this.roomChatDetailImageRepo.save(roomChatDetail);
   }
 }

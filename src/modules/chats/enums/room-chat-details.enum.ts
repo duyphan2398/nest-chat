@@ -11,5 +11,5 @@ export enum RECEIVER_STATUS {
 export enum ROOM_CHAT_DETAIL_TYPE {
   TEXT = 0,
   IMAGE = 1,
-  HTML = 2
+  HTML = 2,
 }

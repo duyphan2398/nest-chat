@@ -13,6 +13,10 @@ export class RoomChatDetailsService {
   async getListRoomChatDetailByRoomId(roomId): Promise<RoomChatDetail[]> {
     return await this.roomChatDetailRepo
       .createQueryBuilder('room_chat_detail')
+      .leftJoinAndSelect(
+        'room_chat_detail.room_chat_detail_image',
+        'room_chat_detail_image',
+      )
       .where('room_chat_detail.room_chat_id = :room_id', { room_id: roomId })
       .orderBy('room_chat_detail.created', 'ASC')
       .getMany();
