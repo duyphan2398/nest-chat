@@ -50,8 +50,7 @@ export class RoomChatDetailImage extends BaseEntity {
     (type) => RoomChatDetail,
     (room_chat_detail) => room_chat_detail.room_chat_detail_image,
   )
-  @JoinColumn({ name: 'room_chat_detail_id' })
-  room_chat_detail: RoomChat;
+  room_chat_detail: RoomChatDetail;
 
   /**
    * Relation: RoomChatDetail
