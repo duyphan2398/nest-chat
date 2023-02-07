@@ -357,7 +357,6 @@ export class ChatGateway
       // Save into database
       await this.roomChatDetailService.save(chatMessageData);
     } catch (exception) {
-      console.log(exception);
       ChatGateway.handleEmitErrorNotice(
         socket,
         'send-chat-message',
@@ -408,15 +407,14 @@ export class ChatGateway
           : roomChat.member_id;
 
       const chatMessageData = {
-        room_chat_id,
-        content: '',
+        room_chat_id: room_chat_id,
+        content: null,
         sender_id: authUser.id,
         sender_status: SENDER_STATUS.SEEN,
         receiver_id: receiverId,
         receiver_status: RECEIVER_STATUS.NOT_SEEN,
         chat_time: now(),
         type: ROOM_CHAT_DETAIL_TYPE.IMAGE,
-        room_chat_detail_image: roomChatDetailImage,
       };
 
       // Emit to clients
@@ -425,19 +423,26 @@ export class ChatGateway
         .to(this.memberRoomPrefix(authUser.id))
         .emit(
           'new-chat-message-image',
-          this.gatewayResponder.ok(chatMessageData),
+          this.gatewayResponder.ok(
+            Object.assign(
+              {
+                room_chat_detail_image: roomChatDetailImage,
+              },
+              chatMessageData,
+            ),
+          ),
         );
 
       // Save into database
       const roomChatDetail = await this.roomChatDetailService.save(
         chatMessageData,
       );
+
       await this.roomChatDetailImageService.save({
         id: roomChatDetailImage.id,
         room_chat_detail_id: roomChatDetail.id,
       });
     } catch (exception) {
-      console.log(exception);
       ChatGateway.handleEmitErrorNotice(
         socket,
         'send-chat-message-image',
