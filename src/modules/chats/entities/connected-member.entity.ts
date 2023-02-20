@@ -8,18 +8,29 @@ import {
 import { Member } from './member.entity';
 import { BaseEntity } from './base.entity';
 
-@Entity('ape_connected_members')
+@Entity('connected_members')
 export class ConnectedMember extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({
+    type: 'bigint',
+    nullable: false,
+  })
   member_id: number;
 
-  @Column()
+  @Column({
+    type: 'varchar',
+    nullable: false,
+    length: 255,
+  })
   connected_id: string;
 
-  @Column()
+  @Column({
+    type: 'varchar',
+    nullable: true,
+    length: 255,
+  })
   session_id: string;
 
   /**

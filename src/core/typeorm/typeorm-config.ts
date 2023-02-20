@@ -13,6 +13,7 @@ export class TypeOrmConfig implements TypeOrmOptionsFactory {
       database: process.env.DB_DATABASE,
       synchronize: false,
       autoLoadEntities: true,
+      entityPrefix: process.env.DB_PREFIX,
     };
   }
 }

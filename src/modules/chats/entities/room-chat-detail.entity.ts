@@ -10,27 +10,44 @@ import { RoomChat } from './room-chat.entity';
 import { RoomChatDetailImage } from './room-chat-detail-image.entity';
 import { BaseEntity } from './base.entity';
 
-@Entity('ape_room_chat_details')
+@Entity('room_chat_details')
 export class RoomChatDetail extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({
+    type: 'bigint',
+    nullable: false,
+  })
   room_chat_id: number;
 
-  @Column()
+  @Column({
+    type: 'bigint',
+    nullable: false,
+  })
   sender_id: number;
 
-  @Column()
+  @Column({
+    type: 'tinyint',
+    nullable: false,
+  })
   sender_status: number;
 
-  @Column()
+  @Column({
+    type: 'bigint',
+    nullable: false,
+  })
   receiver_id: number;
 
-  @Column()
+  @Column({
+    type: 'tinyint',
+    nullable: false,
+  })
   receiver_status: number;
 
   @Column({
+    type: 'datetime',
+    nullable: false,
     transformer: {
       to: (value) => {
         return new Date(value);
@@ -40,10 +57,16 @@ export class RoomChatDetail extends BaseEntity {
   })
   chat_time: string;
 
-  @Column()
+  @Column({
+    type: 'text',
+    nullable: true,
+  })
   content: string;
 
-  @Column()
+  @Column({
+    type: 'int',
+    nullable: false,
+  })
   type: string;
 
   /**

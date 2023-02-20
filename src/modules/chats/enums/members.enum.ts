@@ -9,5 +9,5 @@ export enum MEMBER_IS_VERIFY {
 }
 
 export enum TOKEN_EXPIRED_TIME {
-  SECONDS = 7200 * 10,
+  SECONDS = parseInt(process.env.TOKEN_EXPIRED_TIME),
 }

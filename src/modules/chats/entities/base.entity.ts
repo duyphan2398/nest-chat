@@ -7,10 +7,14 @@ import * as moment from 'moment';
 import { BeforeInsert, BeforeUpdate } from 'typeorm';
 
 export abstract class BaseEntity extends TypeOrmBaseEntity {
-  @CreateDateColumn()
+  @CreateDateColumn({
+    nullable: true,
+  })
   created: string;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({
+    nullable: true,
+  })
   updated: string;
 
   @BeforeInsert()

@@ -7,34 +7,54 @@ import {
   OneToOne,
   ManyToOne,
 } from 'typeorm';
-import { RoomChat } from './room-chat.entity';
 import { RoomChatDetail } from './room-chat-detail.entity';
 import { BaseEntity } from './base.entity';
 
-@Entity('ape_room_chat_detail_images')
+@Entity('room_chat_detail_images')
 export class RoomChatDetailImage extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({
+    type: 'bigint',
+    nullable: true,
+  })
   room_chat_detail_id: number;
 
-  @Column()
+  @Column({
+    type: 'bigint',
+    nullable: false,
+  })
   member_id: number;
 
-  @Column()
+  @Column({
+    type: 'text',
+    nullable: false,
+  })
   ori_name: string;
 
-  @Column()
+  @Column({
+    type: 'text',
+    nullable: false,
+  })
   re_name: string;
 
-  @Column()
+  @Column({
+    type: 'int',
+    nullable: false,
+  })
   size: number;
 
-  @Column()
+  @Column({
+    type: 'varchar',
+    nullable: false,
+    length: 255,
+  })
   type: string;
 
   @Column({
+    type: 'text',
+    nullable: false,
     transformer: {
       to: (value: string) => value,
       from: (value: string) =>

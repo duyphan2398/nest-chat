@@ -11,36 +11,43 @@ import { RoomChat } from './room-chat.entity';
 import { Exclude } from 'class-transformer';
 import { ConnectedMember } from './connected-member.entity';
 
-@Entity('ape_members')
+@Entity('members')
 export class Member extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  phone_number: string;
-
-  @Column()
-  social_facebook_id: string;
-
-  @Column()
-  username: string;
-
-  @Column()
-  full_name: string;
-
-  @Column()
-  email: string;
-
-  @Column()
+  @Column({
+    type: 'varchar',
+    nullable: false,
+    length: 255,
+  })
   country_code: string;
 
-  @Column()
-  gender: number;
-
-  @Column()
-  birthday: string;
+  @Column({
+    type: 'varchar',
+    nullable: false,
+    length: 255,
+  })
+  phone_number: string;
 
   @Column({
+    type: 'varchar',
+    nullable: false,
+    length: 255,
+  })
+  email: string;
+
+  @Column({
+    type: 'varchar',
+    nullable: true,
+    length: 255,
+  })
+  full_name: string;
+
+  @Column({
+    type: 'varchar',
+    nullable: true,
+    length: 255,
     transformer: {
       to: (value: string) => value,
       from: (value: string) =>
@@ -50,17 +57,33 @@ export class Member extends BaseEntity {
   avatar: string;
 
   @Exclude()
-  @Column({ select: false })
+  @Column({
+    type: 'varchar',
+    nullable: true,
+    length: 255,
+    select: false,
+  })
   token: string;
 
   @Exclude()
-  @Column({ select: false })
+  @Column({
+    type: 'timestamp',
+    nullable: true,
+    select: false,
+  })
   created_token: string;
 
-  @Column()
+  @Column({
+    type: 'tinyint',
+    nullable: false,
+    select: false,
+  })
   is_verify: number;
 
-  @Column()
+  @Column({
+    type: 'tinyint',
+    nullable: false,
+  })
   status: number;
 
   /**

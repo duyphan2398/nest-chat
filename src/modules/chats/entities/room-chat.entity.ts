@@ -10,18 +10,27 @@ import { Member } from './member.entity';
 import { RoomChatDetail } from './room-chat-detail.entity';
 import { BaseEntity } from './base.entity';
 
-@Entity('ape_room_chats')
+@Entity('room_chats')
 export class RoomChat extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({
+    type: 'bigint',
+    nullable: false,
+  })
   member_id: number;
 
-  @Column()
+  @Column({
+    type: 'bigint',
+    nullable: false,
+  })
   partner_id: number;
 
-  @Column()
+  @Column({
+    type: 'tinyint',
+    nullable: false,
+  })
   status: number;
 
   // Addition property
